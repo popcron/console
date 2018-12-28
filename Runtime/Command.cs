@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Popcron.Console
 {
@@ -142,10 +143,6 @@ namespace Popcron.Console
                 if (get != null)
                 {
                     parameter = get.ReturnParameter;
-                }
-                if (set != null)
-                {
-                    parameter = set.ReturnParameter;
                 }
 
                 if (parameter != null)
