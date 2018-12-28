@@ -9,10 +9,10 @@ namespace Popcron.Console
 {
     internal static class Extensions
     {
-        public static CommandAttribute GetCommand(this MethodInfo method)
+        public static CommandAttribute GetCommand(this MemberInfo member)
         {
             CommandAttribute attribute = null;
-            object[] attributes = method.GetCustomAttributes(typeof(CommandAttribute), false);
+            object[] attributes = member.GetCustomAttributes(typeof(CommandAttribute), false);
             for (int a = 0; a < attributes.Length; a++)
             {
                 if (attributes[a].GetType() == typeof(CommandAttribute))
@@ -25,10 +25,10 @@ namespace Popcron.Console
             return null;
         }
 
-        public static AliasAttribute[] GetAliases(this MethodInfo method)
+        public static AliasAttribute[] GetAliases(this MemberInfo member)
         {
             List<AliasAttribute> aliases = new List<AliasAttribute>();
-            object[] attributes = method.GetCustomAttributes(typeof(AliasAttribute), false);
+            object[] attributes = member.GetCustomAttributes(typeof(AliasAttribute), false);
             for (int a = 0; a < attributes.Length; a++)
             {
                 if (attributes[a].GetType() == typeof(AliasAttribute))

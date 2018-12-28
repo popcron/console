@@ -35,8 +35,7 @@ namespace Popcron.Console
 
         public static void Register(string id, object owner)
         {
-            Owner ownerValue = null;
-            if (!idToOwner.TryGetValue(id, out ownerValue))
+            if (!idToOwner.TryGetValue(id, out Owner ownerValue))
             {
                 ownerValue = new Owner();
                 idToOwner.Add(id, ownerValue);
@@ -119,8 +118,7 @@ namespace Popcron.Console
                 {
                     string text = input.Replace(commandInput, "");
                     List<string> parameters = GetParameters(text);
-                    object[] converted;
-                    if (command.Matches(parameters, out converted))
+                    if (command.Matches(parameters, out object[] converted))
                     {
                         object owner = FindOwner(command, id);
                         if (owner == null && !command.IsStatic)
@@ -160,12 +158,11 @@ namespace Popcron.Console
             if (id == null) return null;
             if (command.IsStatic) return null;
 
-            Owner owner;
-            if (idToOwner.TryGetValue(id, out owner))
+            if (idToOwner.TryGetValue(id, out Owner owner))
             {
                 for (int i = 0; i < owner.methods.Count; i++)
                 {
-                    if (owner.methods[i].ToString() == command.Method.ToString())
+                    if (owner.methods[i].ToString() == command.Member.ToString())
                     {
                         return owner.owner;
                     }

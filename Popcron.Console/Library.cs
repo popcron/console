@@ -62,16 +62,36 @@ namespace Popcron.Console
             if (commands == null)
             {
                 commands = new List<Command>();
-                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
                 foreach (var assembly in assemblies)
                 {
-                    Type[] types = assembly.GetTypes();
-                    foreach (Type type in types)
+                    var types = assembly.GetTypes();
+                    foreach (var type in types)
                     {
-                        MethodInfo[] methods = type.GetMethods();
-                        foreach (MethodInfo method in methods)
+                        var methods = type.GetMethods();
+                        foreach (var method in methods)
                         {
                             Command command = Command.Create(method, type);
+                            if (command != null)
+                            {
+                                commands.Add(command);
+                            }
+                        }
+
+                        var properties = type.GetProperties();
+                        foreach (var property in properties)
+                        {
+                            Command command = Command.Create(property, type);
+                            if (command != null)
+                            {
+                                commands.Add(command);
+                            }
+                        }
+
+                        var fields = type.GetFields();
+                        foreach (var field in fields)
+                        {
+                            Command command = Command.Create(field, type);
                             if (command != null)
                             {
                                 commands.Add(command);
