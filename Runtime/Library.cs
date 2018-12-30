@@ -41,6 +41,7 @@ namespace Popcron.Console
             if (categories == null)
             {
                 categories = new List<Category>();
+                HashSet<Type> typesWithoutCategories = new HashSet<Type>();
                 Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
                 foreach (var assembly in assemblies)
                 {
@@ -50,11 +51,60 @@ namespace Popcron.Console
                         Category category = Category.Create(type);
                         if (category != null)
                         {
-                            categories.Add(category);
+                            if (TryGetCategory(category.Name, out Category existingCategory))
+                            {
+                                existingCategory.Commands.AddRange(category.Commands);
+                            }
+                            else
+                            {
+                                categories.Add(category);
+                            }
+                        }
+                        else
+                        {
+                            typesWithoutCategories.Add(type);
                         }
                     }
                 }
+
+                if (typesWithoutCategories.Count > 0)
+                {
+                    Category uncategorized = Category.CreateUncategorized();
+                    List<Command> commands = Commands;
+                    foreach (Command command in commands)
+                    {
+                        if (typesWithoutCategories.Contains(command.Owner))
+                        {
+                            uncategorized.Commands.Add(command);
+                        }
+                    }
+
+                    if (uncategorized.Commands.Count > 0)
+                    {
+                        categories.Add(uncategorized);
+                    }
+                }
             }
+        }
+
+        public static bool TryGetCategory(string name, out Category category)
+        {
+            category = null;
+            if (categories == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < categories.Count; i++)
+            {
+                if (categories[i].Name == name)
+                {
+                    category = categories[i];
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static void FindCommands()

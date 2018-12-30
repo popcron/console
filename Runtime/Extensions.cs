@@ -41,7 +41,7 @@ namespace Popcron.Console
             return aliases.ToArray();
         }
 
-        public static CategoryAttribute GetCategory(this Type type)
+        public static CategoryAttribute GetCategoryAttribute(this Type type)
         {
             CategoryAttribute attribute = null;
             object[] attributes = type.GetCustomAttributes(typeof(CategoryAttribute), false);

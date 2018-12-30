@@ -30,10 +30,15 @@ namespace Popcron.Console
             this.name = name;
         }
 
+        public static Category CreateUncategorized()
+        {
+            Category category = new Category("Uncategorized");
+            return category;
+        }
+
         public static Category Create(Type type)
         {
-            CategoryAttribute attribute = type.GetCategory();
-
+            CategoryAttribute attribute = type.GetCategoryAttribute();
             if (attribute == null) return null;
 
             Category category = new Category(attribute.name);
