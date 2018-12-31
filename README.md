@@ -7,7 +7,7 @@ A command line parser for use in Unity.
 - .NET Framework 4.5
 
 ## Installing
-To install for use in Unity, download everything and place it somewhere in your assets folder.
+To install for use in Unity, copy everything from this repository to `<YourNewUnityProject>/Packages/Popcron.Console` folder.
 
 If using 2018.3.x, you can add a new entry to the manifest.json file in your Packages folder:
 ```json
