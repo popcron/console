@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Popcron.Console
@@ -66,6 +67,9 @@ namespace Popcron.Console
                         }
                     }
                 }
+
+                //sort alphabetically
+                categories = categories.OrderBy(x => x.Name).ToList();
 
                 if (typesWithoutCategories.Count > 0)
                 {

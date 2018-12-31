@@ -153,26 +153,26 @@ namespace Popcron.Console
             if (id == null) return null;
             if (command.IsStatic) return null;
 
-            string memberName = command.Member.ToString();
+            string memberName = command.Name;
             if (idToOwner.TryGetValue(id, out Owner owner))
             {
                 for (int i = 0; i < owner.methods.Count; i++)
                 {
-                    if (owner.methods[i].ToString() == memberName)
+                    if (owner.methods[i].name == memberName)
                     {
                         return owner.owner;
                     }
                 }
                 for (int i = 0; i < owner.properties.Count; i++)
                 {
-                    if (owner.properties[i].ToString() == memberName)
+                    if (owner.properties[i].name == memberName)
                     {
                         return owner.owner;
                     }
                 }
                 for (int i = 0; i < owner.fields.Count; i++)
                 {
-                    if (owner.fields[i].ToString() == memberName)
+                    if (owner.fields[i].name == memberName)
                     {
                         return owner.owner;
                     }
