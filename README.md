@@ -1,3 +1,5 @@
+![Woah console woah!!!](https://cdn.discordapp.com/attachments/377316629220032523/498001441990901760/unknown.png)
+
 # Console
 A command line parser for use in developer consoles for games
 
@@ -14,7 +16,7 @@ A Console class is provided as a small wrapper for the parser. Use the `~` key t
 
 If using 2018.3.x, you can add a new entry to the manifest.json file in your Packages folder:
 ```json
-"com.popcron.console": "https://github.com/popcron/console.git#unity"
+"com.popcron.console": "https://github.com/popcron/console.git"
 ```
 
 ## Calling commands
@@ -34,6 +36,7 @@ using Popcron.Console;
 public class PlayerAmmo : MonoBehaviour
 {
     [SerializeField]
+    [Command("ammo")]
     private int ammo = 100;
     
     //when the object gets created, register it
@@ -47,23 +50,11 @@ public class PlayerAmmo : MonoBehaviour
     {
         Parser.Unregister("player");
     }
-    
-    [Command("add ammo")]
-    public void AddAmmo(int amount)
-    {
-        ammo += amount;
-    }
-    
-    [Command("get ammo")]
-    public int GetAmmo()
-    {
-        return ammo;
-    }
 }
 ```
 
 To call this command from the console, you call the method exactly as its writen, with the addition of the `@id` prefix.
-`@player add ammo 100`
+`@player ammo 100`
 
 ### Troubleshooting
 To debug the instance methods, the parser contains a list of all registered owners in the `Parser.Owners` list.
@@ -142,3 +133,25 @@ public class Commands
 - DateTime
 
 You can also add your own type converters by inheriting from the abstract `Converter` class.
+
+## FAQ
+- **How do I add this to my unity project?**
+Add `"com.popcron.console": "https://github.com/popcron/console.git"` to your `manifest.json` file in the packages folder.
+- **It doesn't show up.**
+Press ~.
+- **I pressed it, it still doesn't show up!**
+Invoke the `Console.Initialize()` method, or any of the static methods/properties.
+- **How do I change the key to open the console?**
+Change the `Console.Key` property.
+- **I want to use the original console that's included.**
+If you want to reference the "original console", you can do so by referencing the namespace: `System.Console.WriteLine("wee")`.
+- **Can I use properties as commands?**
+Yes.
+- **Can I use fields as commands?**
+Yes.
+- **Static?**
+Yes, as long as you register and unregister the instance owner of the command.
+- **How do I categorize a command?**
+Add a `Category` attribute to the class type.
+- **How do I make my own converter?**
+Create a new class, and inherit from the `Converter` class.
