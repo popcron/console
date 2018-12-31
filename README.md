@@ -1,7 +1,7 @@
 ![Woah console woah!!!](https://cdn.discordapp.com/attachments/377316629220032523/529091513104465920/unknown.png)
 
 # Console
-A command line parser for use in developer consoles for games
+A command line parser for use in Unity.
 
 ## Requirements
 - .NET Framework 4.5
