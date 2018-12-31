@@ -6,7 +6,7 @@ A command line parser for use in Unity.
 ## Requirements
 - .NET Framework 4.5
 
-## Unity
+## Installing
 To install for use in Unity, download everything and place it somewhere in your assets folder.
 
 If using 2018.3.x, you can add a new entry to the manifest.json file in your Packages folder:
@@ -20,30 +20,32 @@ string command = "help";
 object result = await Parser.Run(command);
 ```
 
-The `Run` command returns an awaited object, this allows commands to be awaitable and use delaying.
+or just `help` from the console window.
+
+The `Run` method is awaitable, allowing commands to be asynchronous.
 
 ## Instance commands
-Command methods that are declared as static can be executed from any context. Instance methods however cannot be called in the same way. These commands require an object that owns the method. The parser class provides methods that allow you to register and unregister objects with a unique ID, which can allow instance commands to be called on an object. This is useful in the case of games, where the instance commands for adding ammo are now marked as commands with the commnd attribute.
+Command methods that are declared as static can be executed from any context. Instance methods however cannot be called in the same way. These commands require an object that owns the method. The parser class provides methods that allow you to register and unregister objects with a unique ID, which can allow instance commands to be called on an object.
 
 ```cs
+using UnityEngine;
 using Popcron.Console;
 
 public class PlayerAmmo : MonoBehaviour
 {
-    [SerializeField]
     [Command("ammo")]
-    private int ammo = 100;
+    public int ammo = 100;
     
     //when the object gets created, register it
     private void OnEnable()
     {
-        Parser.Register("player", this);
+        Parser.Register(this, "player");
     }
     
     //when the object gets destroyed, unregister it
     private void OnDisable()
     {
-        Parser.Unregister("player");
+        Parser.Unregister(this);
     }
 }
 ```
