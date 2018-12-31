@@ -22,8 +22,6 @@ object result = await Parser.Run(command);
 
 or just `help` from the console window.
 
-The `Run` method is awaitable, allowing commands to be asynchronous.
-
 ## Instance commands
 Command methods that are declared as static can be executed from any context. Instance methods however cannot be called in the same way. These commands require an object that owns the method. The parser class provides methods that allow you to register and unregister objects with a unique ID, which can allow instance commands to be called on an object.
 
