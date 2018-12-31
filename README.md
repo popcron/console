@@ -7,12 +7,7 @@ A command line parser for use in Unity.
 - .NET Framework 4.5
 
 ## Unity
-To install for use in Unity, download the following files from the unity branch:
-- Plugins/Popcron.Console.dll
-- Runtime/Console.cs
-- Runtime/CommandsDefault.cs (optional)
-
-A Console class is provided as a small wrapper for the parser. Use the `~` key to open the console.
+To install for use in Unity, download everything and place it somewhere in your assets folder.
 
 If using 2018.3.x, you can add a new entry to the manifest.json file in your Packages folder:
 ```json
