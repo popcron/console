@@ -317,8 +317,12 @@ public class Console : MonoBehaviour
             }
         }
 
-        //set scroll to bottom
-        Scroll = text.Count - MaxLines;
+        int newScroll = text.Count - MaxLines;
+        if (newScroll >= Scroll + 3)
+        {
+            //set scroll to bottom
+            Scroll = newScroll;
+        }
 
         //update the lines string
         UpdateText();
@@ -369,7 +373,8 @@ public class Console : MonoBehaviour
         //view scrolling
         if (Event.current.type == EventType.ScrollWheel)
         {
-            Scroll += (int)Event.current.delta.y;
+            int scrollDirection = (int)Mathf.Sign(Event.current.delta.y) * 3;
+            Scroll += scrollDirection;
             UpdateText();
         }
 
