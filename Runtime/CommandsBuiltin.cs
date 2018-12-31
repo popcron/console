@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
-using Popcron.Console;
+using UnityEngine.Rendering;
 using System.Reflection;
+
+using Popcron.Console;
 
 [Category("Built in commands")]
 public class CommandsBuiltin
@@ -8,13 +10,42 @@ public class CommandsBuiltin
     [Command("info", "Prints system information.")]
     public static void PrintSystemInfo()
     {
+        string deviceName = SystemInfo.deviceName;
+        string deviceModel = SystemInfo.deviceModel;
+        DeviceType deviceType = SystemInfo.deviceType;
+        string id = SystemInfo.deviceUniqueIdentifier;
+
         string os = SystemInfo.operatingSystem;
-        string cpu = SystemInfo.processorType + ", " + SystemInfo.processorCount + " cores (" + (SystemInfo.processorFrequency / 1000f) + " hz)";
+        OperatingSystemFamily osFamily = SystemInfo.operatingSystemFamily;
         string ram = (SystemInfo.systemMemorySize / 1000f) + " gb";
 
-        Console.Print("OS: " + os);
-        Console.Print("CPU: " + cpu);
-        Console.Print("RAM: " + ram);
+        string cpuName = SystemInfo.processorType;
+        int cpuCount = SystemInfo.processorCount;
+        int cpuFrequency = SystemInfo.processorFrequency;
+
+        GraphicsDeviceType gpuType = SystemInfo.graphicsDeviceType;
+        string gpuName = SystemInfo.graphicsDeviceName;
+        string gpuVendor = SystemInfo.graphicsDeviceVendor;
+        string gpuRam = (SystemInfo.graphicsMemorySize / 1000f) + " gb";
+
+        Console.Print("<b>OS</b>: " + os + "(" + osFamily + ")");
+        Console.Print("<b>RAM</b>: " + ram);
+
+        Console.Print("<b>Device</b>");
+        Console.Print("\t<b>Name</b>: " + deviceName);
+        Console.Print("\t<b>Model</b>: " + deviceModel);
+        Console.Print("\t<b>Type</b>: " + deviceType);
+        Console.Print("\t<b>Unique ID</b>: " + id);
+
+        Console.Print("<b>CPU</b>");
+        Console.Print("\t<b>Name</b>: " + cpuName);
+        Console.Print("\t<b>Processors</b>: " + cpuCount);
+        Console.Print("\t<b>Frequency</b>: " + SystemInfo.processorFrequency);
+
+        Console.Print("<b>GPU</b>");
+        Console.Print("\t<b>Name</b>: " + gpuName);
+        Console.Print("\t<b>Vendor</b>: " + gpuVendor);
+        Console.Print("\t<b>Memory</b>: " + gpuRam);
     }
 
     [Command("clear", "Clears the console window.")]
@@ -32,7 +63,18 @@ public class CommandsBuiltin
             Console.Print("\t" + owner.id + " = " + owner.owner);
             foreach (var method in owner.methods)
             {
-                Console.Print("\t\t" + method.Name);
+                string parameters = "";
+                Console.Print("\t\t" + method.name + parameters);
+            }
+            foreach (var property in owner.properties)
+            {
+                string extra = "";
+                if (property.canSetProperty) extra += " [value]";
+                Console.Print("\t\t" + property.name + extra);
+            }
+            foreach (var field in owner.fields)
+            {
+                Console.Print("\t\t" + field.name + " = " + field.Value);
             }
         }
     }
@@ -95,22 +137,5 @@ public class CommandsBuiltin
     public static void Echo(string text)
     {
         Console.Print(text);
-    }
-
-    [Command("list controllers")]
-    public static void ListControllers()
-    {
-        var joys = Input.GetJoystickNames();
-        if (joys.Length == 0)
-        {
-            Console.Warn("No controllers plugged in.");
-        }
-        else
-        {
-            for (int i = 0; i < joys.Length; i++)
-            {
-                Console.Print("\t" + joys[i]);
-            }
-        }
     }
 }

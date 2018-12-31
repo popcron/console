@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Popcron.Console
 {
@@ -55,6 +53,12 @@ namespace Popcron.Console
             }
 
             return null;
+        }
+
+        public static char GetCharFromKeyCode(this KeyCode keyCode)
+        {
+            int index = (int)keyCode;
+            return (char)index;
         }
     }
 }

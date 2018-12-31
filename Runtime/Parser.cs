@@ -28,43 +28,25 @@ namespace Popcron.Console
             }
         }
 
-        public static void Register(int id, object owner)
+        public static void Register(object owner, int id)
         {
-            Register(id.ToString(), owner);
+            Register(owner, id.ToString());
         }
 
-        public static void Register(string id, object owner)
+        public static void Register(object owner, string id)
         {
             if (!idToOwner.TryGetValue(id, out Owner ownerValue))
             {
                 ownerValue = new Owner();
                 idToOwner.Add(id, ownerValue);
             }
-
-            if (ownerValue.methods == null)
-            {
-                ownerValue.methods = new List<MethodInfo>();
-            }
-            else
-            {
-                ownerValue.methods.Clear();
-            }
-
+            
             ownerValue.owner = owner;
             ownerValue.id = id;
 
-            //try to add all of its instance methods
-            MethodInfo[] methods = owner.GetType().GetMethods();
-            for (int m = 0; m < methods.Length; m++)
-            {
-                if (methods[m].IsStatic) continue;
-
-                CommandAttribute attribute = methods[m].GetCommand();
-                if (attribute != null)
-                {
-                    ownerValue.methods.Add(methods[m]);
-                }
-            }
+            ownerValue.FindMethods();
+            ownerValue.FindProperties();
+            ownerValue.FindFields();
         }
 
         public static void Initialize()
@@ -72,6 +54,19 @@ namespace Popcron.Console
             Library.FindCategories();
             Library.FindCommands();
             Converter.FindConverters();
+        }
+
+        public static void Unregister(object owner)
+        {
+            List<Owner> owners = Owners;
+            for (int i = 0; i < owners.Count; i++)
+            {
+                if (owners[i].owner == owner)
+                {
+                    Unregister(owners[i].id);
+                    return;
+                }
+            }
         }
 
         public static void Unregister(int id)
@@ -158,11 +153,26 @@ namespace Popcron.Console
             if (id == null) return null;
             if (command.IsStatic) return null;
 
+            string memberName = command.Member.ToString();
             if (idToOwner.TryGetValue(id, out Owner owner))
             {
                 for (int i = 0; i < owner.methods.Count; i++)
                 {
-                    if (owner.methods[i].ToString() == command.Member.ToString())
+                    if (owner.methods[i].ToString() == memberName)
+                    {
+                        return owner.owner;
+                    }
+                }
+                for (int i = 0; i < owner.properties.Count; i++)
+                {
+                    if (owner.properties[i].ToString() == memberName)
+                    {
+                        return owner.owner;
+                    }
+                }
+                for (int i = 0; i < owner.fields.Count; i++)
+                {
+                    if (owner.fields[i].ToString() == memberName)
                     {
                         return owner.owner;
                     }

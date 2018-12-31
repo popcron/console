@@ -1,23 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-using System.Text.RegularExpressions;
 using Popcron.Console;
 
+[AddComponentMenu("")]
 public class Console : MonoBehaviour
 {
     private const int HistorySize = 200;
+
     private const int MaxLines = 30;
     private const int LineHeight = 16;
     private const string ConsoleControlName = "ControlField";
     private const string PrintColor = "white";
     private const string WarningColor = "orange";
     private const string ErrorColor = "red";
-    private const string UserColor = "gray";
+    private const string UserColor = "lime";
 
     private static Console instance;
 
@@ -26,7 +24,7 @@ public class Console : MonoBehaviour
         get
         {
             Texture2D texture = new Texture2D(1, 1);
-            texture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.5f));
+            texture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.8f));
             texture.Apply();
             return texture;
         }
@@ -48,6 +46,7 @@ public class Console : MonoBehaviour
                 if (!console)
                 {
                     console = consoleGameObject.AddComponent<Console>();
+                    console.UpdateText();
                 }
 
                 instance = console;
@@ -61,11 +60,26 @@ public class Console : MonoBehaviour
     {
         get
         {
-            return PlayerPrefs.GetString("consoleText") + "";
+            return PlayerPrefs.GetString(Application.buildGUID + "_console_text") + "";
         }
         set
         {
-            PlayerPrefs.SetString("consoleText", value);
+            PlayerPrefs.SetString(Application.buildGUID + "_console_text", value);
+        }
+    }
+
+    public static KeyCode Key
+    {
+        get
+        {
+            int defaultValue = (int)KeyCode.BackQuote;
+            int savedValue = PlayerPrefs.GetInt(Application.buildGUID + "_console_key", defaultValue);
+            return (KeyCode)defaultValue;
+        }
+        set
+        {
+            int newValue = (int)value;
+            PlayerPrefs.SetInt(Application.buildGUID + "_console_key", newValue);
         }
     }
 
@@ -100,6 +114,7 @@ public class Console : MonoBehaviour
     private int historyIndex;
     private List<string> text = new List<string>();
     private List<string> history = new List<string>();
+    private string linesString;
     private GUIStyle style;
 
     private void Awake()
@@ -119,15 +134,37 @@ public class Console : MonoBehaviour
         Application.logMessageReceived += HandleLog;
     }
 
+    private void OnDisable()
+    {
+        Application.logMessageReceived -= HandleLog;
+    }
+
+    private Font GetFont(string fontName)
+    {
+        Font[] fonts = Resources.LoadAll<Font>("");
+        for (int i = 0; i < fonts.Length; i++)
+        {
+            if (fonts[i].name == fontName)
+            {
+                return fonts[i];
+            }
+        }
+
+        return null;
+    }
+
     //creates a style to be used in the gui calls
     private void CreateStyle()
     {
+        Font font = GetFont("MonospaceTypewriter");
         Texture2D pixel = Pixel;
-        style = new GUIStyle();
-        style.richText = true;
+        style = new GUIStyle
+        {
+            richText = true,
+            alignment = TextAnchor.UpperLeft,
+            font = font
+        };
 
-        //box
-        style.alignment = TextAnchor.UpperLeft;
         style.normal.background = pixel;
         style.normal.textColor = Color.white;
 
@@ -138,14 +175,16 @@ public class Console : MonoBehaviour
         style.active.textColor = Color.white;
     }
 
-    private void OnDisable()
-    {
-        Application.logMessageReceived -= HandleLog;
-    }
-
     private void HandleLog(string message, string stack, LogType logType)
     {
         WriteLine(message, logType);
+    }
+
+    public static void Initialize()
+    {
+        //dumb
+        Open = false;
+        Run("info");
     }
 
     /// <summary>
@@ -187,9 +226,15 @@ public class Console : MonoBehaviour
         Text = "";
         Instance.text.Clear();
         Instance.history.Clear();
+        Instance.UpdateText();
     }
 
-    private static void WriteLine(object text, LogType type = LogType.Log)
+    /// <summary>
+    /// Submit generic text to the console
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="type"></param>
+    public static void WriteLine(object text, LogType type = LogType.Log)
     {
         if (type == LogType.Log)
         {
@@ -216,10 +261,17 @@ public class Console : MonoBehaviour
         object result = await Parser.Run(command);
         if (result == null) return;
 
-        if (result is Exception)
+        if (result is Exception exception)
         {
-            Exception exception = result as Exception;
-            Error(exception.Message + "\n" + exception.InnerException.Message + "\n" + exception.InnerException.StackTrace);
+            Exception inner = exception.InnerException;
+            if (inner != null)
+            {
+                Error(exception.Message + "\n" + exception.Source + "\n" + inner.Message + "\n" + inner.StackTrace);
+            }
+            else
+            {
+                Error(exception.Message + "\n" + exception.StackTrace);
+            }
         }
         else
         {
@@ -253,7 +305,7 @@ public class Console : MonoBehaviour
         }
         else
         {
-            lines.Add("<color=" + color + ">" + str + "</color>");
+            lines.Add(str);
         }
 
         foreach (var line in lines)
@@ -265,21 +317,49 @@ public class Console : MonoBehaviour
             }
         }
 
+        //set scroll to bottom
         Scroll = text.Count - MaxLines;
+
+        //update the lines string
+        UpdateText();
+    }
+
+    private void UpdateText()
+    {
+        string[] lines = new string[MaxLines];
+        int lineIndex = 0;
+        for (int i = 0; i < text.Count; i++)
+        {
+            int index = i + Scroll;
+            if (index < 0) continue;
+            if (index >= text.Count) continue;
+            if (string.IsNullOrEmpty(text[index])) break;
+
+            lines[lineIndex] = (text[index]);
+
+            //replace all \t with 4 spaces
+            lines[lineIndex] = lines[lineIndex].Replace("\t", "    ");
+
+            lineIndex++;
+            if (lineIndex == MaxLines) break;
+        }
+
+        linesString = string.Join("\n", lines);
     }
 
     private void OnGUI()
     {
         if (Event.current.type == EventType.KeyDown)
         {
-            if (Event.current.keyCode == KeyCode.BackQuote)
+            if (Event.current.keyCode == Key)
             {
                 Text = "";
                 Open = !Open;
                 Event.current.Use();
             }
 
-            if (Event.current.character == '`') return;
+            char character = Key.GetCharFromKeyCode();
+            if (Event.current.character == character) return;
         }
 
         //dont show the console if it shouldnt be open
@@ -290,6 +370,7 @@ public class Console : MonoBehaviour
         if (Event.current.type == EventType.ScrollWheel)
         {
             Scroll += (int)Event.current.delta.y;
+            UpdateText();
         }
 
         //history scolling
@@ -329,25 +410,9 @@ public class Console : MonoBehaviour
             }
         }
 
-        //draw lines
-        string[] lines = new string[MaxLines];
-        int lineIndex = 0;
-        for (int i = 0; i < text.Count; i++)
-        {
-            int index = i + Scroll;
-            if (index < 0) continue;
-            if (index >= text.Count) continue;
-            if (string.IsNullOrEmpty(text[index])) break;
-
-            lines[lineIndex] = (text[index]);
-
-            lineIndex++;
-            if (lineIndex == MaxLines) break;
-        }
-
         //draw elements
         GUI.depth = -5;
-        GUILayout.Box(string.Join("\n", lines), style, GUILayout.Width(Screen.width));
+        GUILayout.Box(linesString, style, GUILayout.Width(Screen.width));
         Rect lastControl = GUILayoutUtility.GetLastRect();
 
         //draw the typing field
