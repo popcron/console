@@ -130,13 +130,13 @@ public class Commands
 You can also add your own type converters by inheriting from the abstract `Converter` class.
 
 ## Built in commands
-`info` Prints the system information (OS, Device, CPU and GPU).
-`show fps` Boolean toggle for whether the fps counter should show up or not.
-`clear` Clears the console.
-`owners` Prints all registered owners, along with their instance methods, properties and fields.
-`converters` Lists all registered converters.
-`help` Prints all commands found as static methods, properties and fields.
-`echo` Dumb echo command.
+- `info` Prints the system information (OS, Device, CPU and GPU).
+- `show fps` Boolean toggle for whether the fps counter should show up or not.
+- `clear` Clears the console.
+- `owners` Prints all registered owners, along with their instance methods, properties and fields.
+- `converters` Lists all registered converters.
+- `help` Prints all commands found as static methods, properties and fields.
+- `echo` Dumb echo command.
 
 ## FAQ
 - **How do I add this to my unity project?**
