@@ -60,11 +60,19 @@ public class Console : MonoBehaviour
     {
         get
         {
-            return PlayerPrefs.GetString(Application.buildGUID + "_console_text") + "";
+            return PlayerPrefs.GetString(ID + "_Console_Text") + "";
         }
         set
         {
-            PlayerPrefs.SetString(Application.buildGUID + "_console_text", value);
+            PlayerPrefs.SetString(ID + "_Console_Text", value);
+        }
+    }
+
+    public static int ID
+    {
+        get
+        {
+            return Instance.currentlyUniqueId;
         }
     }
 
@@ -73,13 +81,13 @@ public class Console : MonoBehaviour
         get
         {
             int defaultValue = (int)KeyCode.BackQuote;
-            int savedValue = PlayerPrefs.GetInt(Application.buildGUID + "_console_key", defaultValue);
+            int savedValue = PlayerPrefs.GetInt(ID + "_Console_Key", defaultValue);
             return (KeyCode)defaultValue;
         }
         set
         {
             int newValue = (int)value;
-            PlayerPrefs.SetInt(Application.buildGUID + "_console_key", newValue);
+            PlayerPrefs.SetInt(ID + "_Console_Key", newValue);
         }
     }
 
@@ -109,16 +117,20 @@ public class Console : MonoBehaviour
         }
     }
 
+    private float deltaTime;
+    private int currentlyUniqueId;
     private bool open;
     private int scroll;
     private int historyIndex;
     private List<string> text = new List<string>();
     private List<string> history = new List<string>();
     private string linesString;
-    private GUIStyle style;
+    private GUIStyle consoleStyle;
+    private GUIStyle fpsCounterStyle;
 
     private void Awake()
     {
+        currentlyUniqueId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         instance = this;
         Parser.Initialize();
     }
@@ -157,22 +169,29 @@ public class Console : MonoBehaviour
     private void CreateStyle()
     {
         Font font = GetFont("MonospaceTypewriter");
+
         Texture2D pixel = Pixel;
-        style = new GUIStyle
+        consoleStyle = new GUIStyle
         {
             richText = true,
             alignment = TextAnchor.UpperLeft,
             font = font
         };
 
-        style.normal.background = pixel;
-        style.normal.textColor = Color.white;
+        consoleStyle.normal.background = pixel;
+        consoleStyle.normal.textColor = Color.white;
 
-        style.hover.background = pixel;
-        style.hover.textColor = Color.white;
+        consoleStyle.hover.background = pixel;
+        consoleStyle.hover.textColor = Color.white;
 
-        style.active.background = pixel;
-        style.active.textColor = Color.white;
+        consoleStyle.active.background = pixel;
+        consoleStyle.active.textColor = Color.white;
+
+        //fps counter style
+        fpsCounterStyle = new GUIStyle(consoleStyle)
+        {
+            alignment = TextAnchor.UpperRight
+        };
     }
 
     private void HandleLog(string message, string stack, LogType logType)
@@ -318,7 +337,7 @@ public class Console : MonoBehaviour
         }
 
         int newScroll = text.Count - MaxLines;
-        if (newScroll >= Scroll + 3)
+        if (newScroll > Scroll + 3)
         {
             //set scroll to bottom
             Scroll = newScroll;
@@ -328,6 +347,7 @@ public class Console : MonoBehaviour
         UpdateText();
     }
 
+    //creates a single text to use when display the console
     private void UpdateText()
     {
         string[] lines = new string[MaxLines];
@@ -351,8 +371,28 @@ public class Console : MonoBehaviour
         linesString = string.Join("\n", lines);
     }
 
+    private void Update()
+    {
+        deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
+    }
+
+    private void ShowFPS()
+    {
+        if (CommandsBuiltin.ShowFPS)
+        {
+            float msec = deltaTime * 1000f;
+            float fps = 1f / deltaTime;
+            string text = string.Format("{0:0.0} ms ({1:0.} fps)", msec, fps);
+            Rect rect = new Rect(Screen.width - 100, 0, 100, 0);
+            GUI.Label(rect, text, fpsCounterStyle);
+        }
+    }
+
     private void OnGUI()
     {
+        //show fps
+        ShowFPS();
+
         if (Event.current.type == EventType.KeyDown)
         {
             if (Event.current.keyCode == Key)
@@ -417,16 +457,16 @@ public class Console : MonoBehaviour
 
         //draw elements
         GUI.depth = -5;
-        GUILayout.Box(linesString, style, GUILayout.Width(Screen.width));
+        GUILayout.Box(linesString, consoleStyle, GUILayout.Width(Screen.width));
         Rect lastControl = GUILayoutUtility.GetLastRect();
 
         //draw the typing field
         GUI.depth = -5;
-        GUI.Box(new Rect(0, lastControl.y + lastControl.height, Screen.width, 2), "", style);
+        GUI.Box(new Rect(0, lastControl.y + lastControl.height, Screen.width, 2), "", consoleStyle);
 
         GUI.depth = -5;
         GUI.SetNextControlName(ConsoleControlName);
-        Text = GUI.TextField(new Rect(0, lastControl.y + lastControl.height + 1, Screen.width, 16), Text, style);
+        Text = GUI.TextField(new Rect(0, lastControl.y + lastControl.height + 1, Screen.width, 16), Text, consoleStyle);
         GUI.FocusControl(ConsoleControlName);
 
         //pressing enter to run command

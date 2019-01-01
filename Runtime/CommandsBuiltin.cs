@@ -48,6 +48,19 @@ public class CommandsBuiltin
         Console.Print("\t<b>Memory</b>: " + gpuRam);
     }
 
+    [Command("show fps")]
+    public static bool ShowFPS
+    {
+        get
+        {
+            return PlayerPrefs.GetInt(Console.ID + "_Console_ShowFPS", 0) == 1;
+        }
+        set
+        {
+            PlayerPrefs.SetInt(Console.ID + "_Console_ShowFPS", value ? 1 : 0);
+        }
+    }
+
     [Command("clear", "Clears the console window.")]
     public static void ClearConsole()
     {
