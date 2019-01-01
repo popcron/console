@@ -16,7 +16,7 @@ namespace Popcron.Console
 
         public override object Convert(string value)
         {
-            return value == "1" || value.ToLower() == "True";
+            return value == "1" || value.ToLower() == "true";
         }
     }
 }
