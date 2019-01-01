@@ -196,6 +196,9 @@ public class Console : MonoBehaviour
 
     private void HandleLog(string message, string stack, LogType logType)
     {
+        //dont print this, its spam
+        if (logType == LogType.Warning) return;
+
         WriteLine(message, logType);
     }
 
