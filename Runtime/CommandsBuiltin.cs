@@ -28,24 +28,24 @@ public class CommandsBuiltin
         string gpuVendor = SystemInfo.graphicsDeviceVendor;
         string gpuRam = (SystemInfo.graphicsMemorySize / 1000f) + " gb";
 
-        Console.Print("<b>OS</b>: " + os + "(" + osFamily + ")");
-        Console.Print("<b>RAM</b>: " + ram);
-
+        int padding = 23;
         Console.Print("<b>Device</b>");
-        Console.Print("\t<b>Name</b>: " + deviceName);
-        Console.Print("\t<b>Model</b>: " + deviceModel);
-        Console.Print("\t<b>Type</b>: " + deviceType);
-        Console.Print("\t<b>Unique ID</b>: " + id);
+        Console.Print("\t<b>OS</b>".PadRight(padding) + os + "(" + osFamily + ")");
+        Console.Print("\t<b>RAM</b>".PadRight(padding) + ram);
+        Console.Print("\t<b>Name</b>".PadRight(padding) + deviceName);
+        Console.Print("\t<b>Model</b>".PadRight(padding) + deviceModel);
+        Console.Print("\t<b>Type</b>".PadRight(padding) + deviceType);
+        Console.Print("\t<b>Unique ID</b>".PadRight(padding) + id);
 
         Console.Print("<b>CPU</b>");
-        Console.Print("\t<b>Name</b>: " + cpuName);
-        Console.Print("\t<b>Processors</b>: " + cpuCount);
-        Console.Print("\t<b>Frequency</b>: " + SystemInfo.processorFrequency);
+        Console.Print("\t<b>Name</b>".PadRight(padding) + cpuName);
+        Console.Print("\t<b>Processors</b>".PadRight(padding) + cpuCount);
+        Console.Print("\t<b>Frequency</b>".PadRight(padding) + SystemInfo.processorFrequency);
 
         Console.Print("<b>GPU</b>");
-        Console.Print("\t<b>Name</b>: " + gpuName);
-        Console.Print("\t<b>Vendor</b>: " + gpuVendor);
-        Console.Print("\t<b>Memory</b>: " + gpuRam);
+        Console.Print("\t<b>Name</b>".PadRight(padding) + gpuName);
+        Console.Print("\t<b>Vendor</b>".PadRight(padding) + gpuVendor);
+        Console.Print("\t<b>Memory</b>".PadRight(padding) + gpuRam);
     }
 
     [Command("show fps")]
