@@ -196,10 +196,20 @@ public class Console : MonoBehaviour
 
     private void HandleLog(string message, string stack, LogType logType)
     {
-        //dont print this, its spam
-        if (logType == LogType.Warning) return;
-
-        WriteLine(message, logType);
+        if (logType == LogType.Warning)
+        {
+            //dont print this, its spam
+            return;
+        }
+        else if (logType == LogType.Log)
+        {
+            WriteLine(message, logType);
+        }
+        else
+        {
+            //if any kind of error, print the stack as well
+            WriteLine(message + "\n" + stack, logType);
+        }
     }
 
     public static void Initialize()
