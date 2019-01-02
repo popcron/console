@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using Popcron.Console;
+using System.Text;
 
 [AddComponentMenu("")]
 public class Console : MonoBehaviour
@@ -219,14 +220,56 @@ public class Console : MonoBehaviour
         Run("info");
     }
 
+    private static string GetStringFromObject(object message)
+    {
+        if (message == null) return null;
+
+        if (message is List<byte> listOfBytes)
+        {
+            StringBuilder builder = new StringBuilder(listOfBytes.Count * 5);
+            int spacing = 25;
+            for (int i = 0; i < listOfBytes.Count; i++)
+            {
+                builder.Append(listOfBytes[i].ToString("000"));
+                builder.Append(" ");
+                if (i % spacing == 0 && i >= spacing)
+                {
+                    builder.AppendLine();
+                }
+            }
+
+            return builder.ToString();
+        }
+        else if (message is byte[] arrayOfBytes)
+        {
+            StringBuilder builder = new StringBuilder(arrayOfBytes.Length * 5);
+            int spacing = 25;
+            for (int i = 0; i < arrayOfBytes.Length; i++)
+            {
+                builder.Append(arrayOfBytes[i].ToString("000"));
+                builder.Append(" ");
+                if (i % spacing == 0 && i >= spacing)
+                {
+                    builder.AppendLine();
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        return message.ToString();
+    }
+
     /// <summary>
     /// Prints a log message
     /// </summary>
     /// <param name="message"></param>
     public static void Print(object message)
     {
-        if (message == null) return;
-        Instance.Add(message.ToString(), PrintColor);
+        string txt = GetStringFromObject(message);
+        if (txt == null) return;
+
+        Instance.Add(txt, PrintColor);
     }
 
     /// <summary>
@@ -235,8 +278,10 @@ public class Console : MonoBehaviour
     /// <param name="message"></param>
     public static void Warn(object message)
     {
-        if (message == null) return;
-        Instance.Add(message.ToString(), WarningColor);
+        string txt = GetStringFromObject(message);
+        if (txt == null) return;
+
+        Instance.Add(txt, WarningColor);
     }
 
     /// <summary>
@@ -245,8 +290,10 @@ public class Console : MonoBehaviour
     /// <param name="message"></param>
     public static void Error(object message)
     {
-        if (message == null) return;
-        Instance.Add(message.ToString(), ErrorColor);
+        string txt = GetStringFromObject(message);
+        if (txt == null) return;
+
+        Instance.Add(txt, ErrorColor);
     }
 
     /// <summary>
