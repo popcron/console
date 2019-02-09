@@ -13,6 +13,7 @@ If using 2018.3.x, you can add a new entry to the manifest.json file in your Pac
 ```json
 "com.popcron.console": "https://github.com/popcron/console.git"
 ```
+After that, make sure you call `Popcron.Console.Console.Initialize();` in Awake or OnEnable.
 
 ## Calling commands
 ```cs
