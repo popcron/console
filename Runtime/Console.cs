@@ -397,7 +397,7 @@ public class Console : MonoBehaviour
         }
 
         int newScroll = text.Count - MaxLines;
-        if (newScroll > Scroll + 3)
+        if (newScroll > Scroll)
         {
             //set scroll to bottom
             Scroll = newScroll;
