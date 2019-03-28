@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,8 +10,7 @@ public class Console : MonoBehaviour
 {
     private const int HistorySize = 200;
 
-    private const int MaxLines = 30;
-    private const int LineHeight = 16;
+    private const int LineHeight = 12;
     private const string ConsoleControlName = "ControlField";
     private const string PrintColor = "white";
     private const string WarningColor = "orange";
@@ -28,6 +27,15 @@ public class Console : MonoBehaviour
             texture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.8f));
             texture.Apply();
             return texture;
+        }
+    }
+
+    private static int MaxLines
+    {
+        get
+        {
+            int lines = Mathf.RoundToInt(Screen.height * 0.45f / LineHeight);
+            return Mathf.Clamp(lines, 4, 32);
         }
     }
 
@@ -123,6 +131,7 @@ public class Console : MonoBehaviour
     private bool open;
     private int scroll;
     private int historyIndex;
+    private int lastMaxLines;
     private List<string> text = new List<string>();
     private List<string> history = new List<string>();
     private string linesString;
@@ -434,6 +443,13 @@ public class Console : MonoBehaviour
     private void Update()
     {
         deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
+
+        //max lines amount changed
+        if (lastMaxLines != MaxLines)
+        {
+            lastMaxLines = MaxLines;
+            UpdateText();
+        }
     }
 
     private void ShowFPS()
