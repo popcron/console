@@ -85,21 +85,6 @@ public class Console : MonoBehaviour
         }
     }
 
-    public static KeyCode Key
-    {
-        get
-        {
-            int defaultValue = (int)KeyCode.BackQuote;
-            int savedValue = PlayerPrefs.GetInt(ID + "_Console_Key", defaultValue);
-            return (KeyCode)defaultValue;
-        }
-        set
-        {
-            int newValue = (int)value;
-            PlayerPrefs.SetInt(ID + "_Console_Key", newValue);
-        }
-    }
-
     public static bool Open
     {
         get
@@ -463,6 +448,25 @@ public class Console : MonoBehaviour
             GUI.Label(rect, text, fpsCounterStyle);
         }
     }
+    
+    private bool IsConsoleKey(KeyCode key)
+    {
+        if (key == KeyCode.BackQuote) return true;
+        if (key == KeyCode.Tilde) return true;
+        
+        return false;
+    }
+    
+    private bool IsConsoleChar(char character)
+    {
+        if (character == '`') return true;
+        if (character == '~') return true;
+        
+        //sweedish/fn keyboard
+        if (character == '§') return true;
+        
+        return false;
+    }
 
     private void OnGUI()
     {
@@ -471,15 +475,14 @@ public class Console : MonoBehaviour
 
         if (Event.current.type == EventType.KeyDown)
         {
-            if (Event.current.keyCode == Key)
+            if (IsConsoleKey(Event.current.keyCode))
             {
                 Text = "";
                 Open = !Open;
                 Event.current.Use();
             }
 
-            char character = Key.GetCharFromKeyCode();
-            if (Event.current.character == character) return;
+            if (IsConsoleChar(Event.current.character)) return;
         }
 
         //dont show the console if it shouldnt be open
