@@ -53,11 +53,13 @@ public class CommandsBuiltin
     {
         get
         {
-            return PlayerPrefs.GetInt(Console.ID + "_Console_ShowFPS", 0) == 1;
+            string key = Application.buildGUID + SystemInfo.deviceUniqueIdentifier;
+            return PlayerPrefs.GetInt(key + ".Popcron.Console.ShowFPS", 0) == 1;
         }
         set
         {
-            PlayerPrefs.SetInt(Console.ID + "_Console_ShowFPS", value ? 1 : 0);
+            string key = Application.buildGUID + SystemInfo.deviceUniqueIdentifier;
+            PlayerPrefs.SetInt(key + ".Popcron.Console.ShowFPS", value ? 1 : 0);
         }
     }
 
@@ -74,12 +76,12 @@ public class CommandsBuiltin
         foreach (Owner owner in Parser.Owners)
         {
             Console.Print("\t" + owner.id + " = " + owner.owner);
-            foreach (var method in owner.methods)
+            foreach (Owner.OwnerMember method in owner.methods)
             {
                 string parameters = "";
                 Console.Print("\t\t" + method.name + parameters);
             }
-            foreach (var property in owner.properties)
+            foreach (Owner.OwnerMember property in owner.properties)
             {
                 string extra = "";
                 if (property.canSetProperty) extra += " [value]";
@@ -105,10 +107,10 @@ public class CommandsBuiltin
     public static void Help()
     {
         Console.Print("All commands registered: ");
-        foreach (var category in Library.Categories)
+        foreach (Category category in Library.Categories)
         {
             Console.Print("\t" + category.Name);
-            foreach (var command in category.Commands)
+            foreach (Command command in category.Commands)
             {
                 string text = string.Join("/", command.Names);
                 if (command.Member is MethodInfo method)

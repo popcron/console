@@ -10,7 +10,6 @@ public class Console : MonoBehaviour
 {
     private const int HistorySize = 200;
 
-    private const int LineHeight = 12;
     private const string ConsoleControlName = "ControlField";
     private const string PrintColor = "white";
     private const string WarningColor = "orange";
@@ -34,7 +33,7 @@ public class Console : MonoBehaviour
     {
         get
         {
-            int lines = Mathf.RoundToInt(Screen.height * 0.45f / LineHeight);
+            int lines = Mathf.RoundToInt(Screen.height * 0.45f / 16);
             return Mathf.Clamp(lines, 4, 32);
         }
     }
@@ -69,19 +68,13 @@ public class Console : MonoBehaviour
     {
         get
         {
-            return PlayerPrefs.GetString(ID + "_Console_Text") + "";
+            string key = Application.buildGUID + SystemInfo.deviceUniqueIdentifier;
+            return PlayerPrefs.GetString(key + ".Popcron.Console.Text") + "";
         }
         set
         {
-            PlayerPrefs.SetString(ID + "_Console_Text", value);
-        }
-    }
-
-    public static int ID
-    {
-        get
-        {
-            return Instance.currentlyUniqueId;
+            string key = Application.buildGUID + SystemInfo.deviceUniqueIdentifier;
+            PlayerPrefs.SetString(key + ".Popcron.Console.Text", value);
         }
     }
 
@@ -112,20 +105,20 @@ public class Console : MonoBehaviour
     }
 
     private float deltaTime;
-    private int currentlyUniqueId;
     private bool open;
     private int scroll;
-    private int historyIndex;
+    private int index;
     private int lastMaxLines;
     private List<string> text = new List<string>();
     private List<string> history = new List<string>();
+    private List<string> searchResults = new List<string>();
     private string linesString;
+    private bool typedSomething;
     private GUIStyle consoleStyle;
     private GUIStyle fpsCounterStyle;
 
     private void Awake()
     {
-        currentlyUniqueId = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         instance = this;
         Parser.Initialize();
     }
@@ -170,7 +163,8 @@ public class Console : MonoBehaviour
         {
             richText = true,
             alignment = TextAnchor.UpperLeft,
-            font = font
+            font = font,
+            fontSize = 12
         };
 
         consoleStyle.normal.background = pixel;
@@ -448,30 +442,59 @@ public class Console : MonoBehaviour
             GUI.Label(rect, text, fpsCounterStyle);
         }
     }
-    
+
     private bool IsConsoleKey(KeyCode key)
     {
         if (key == KeyCode.BackQuote) return true;
         if (key == KeyCode.Tilde) return true;
-        
+
         return false;
     }
-    
+
     private bool IsConsoleChar(char character)
     {
         if (character == '`') return true;
         if (character == '~') return true;
-        
+
         //sweedish/fn keyboard
         if (character == '§') return true;
-        
+
         return false;
+    }
+
+    private void Search(string text)
+    {
+        //search through all commands
+        searchResults.Clear();
+        if (string.IsNullOrEmpty(text)) return;
+
+        foreach (Category category in Library.Categories)
+        {
+            foreach (Command command in category.Commands)
+            {
+                if (command.Name.StartsWith(text))
+                {
+                    searchResults.Add(command.Name);
+                }
+            }
+        }
+    }
+
+    private void MoveToEnd()
+    {
+
+        TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+        if (te != null)
+        {
+            te.MoveCursorToPosition(new Vector2(5555, 5555));
+        }
     }
 
     private void OnGUI()
     {
         //show fps
         ShowFPS();
+        bool moveToEnd = false;
 
         if (Event.current.type == EventType.KeyDown)
         {
@@ -479,6 +502,12 @@ public class Console : MonoBehaviour
             {
                 Text = "";
                 Open = !Open;
+                if (Open)
+                {
+                    typedSomething = false;
+                    index = history.Count;
+                    Search(Text);
+                }
                 Event.current.Use();
             }
 
@@ -502,51 +531,129 @@ public class Console : MonoBehaviour
         {
             if (Event.current.keyCode == KeyCode.UpArrow)
             {
-                historyIndex--;
-                if (historyIndex < -1)
+                if (!typedSomething)
                 {
-                    historyIndex = -1;
-                    Text = "";
+                    index--;
+                    if (index < -1)
+                    {
+                        index = -1;
+                        Text = "";
+                        moveToEnd = true;
+                    }
+                    else
+                    {
+                        if (index >= 0 && index < history.Count)
+                        {
+                            Text = history[index];
+                            moveToEnd = true;
+                        }
+                    }
                 }
                 else
                 {
-                    if (historyIndex >= 0 && historyIndex < history.Count)
+                    index--;
+                    if (index <= -1)
                     {
-                        Text = history[historyIndex];
+                        index = -1;
+                        Text = "";
+                        moveToEnd = true;
+                    }
+                    else
+                    {
+                        if (index >= 0 && index < searchResults.Count)
+                        {
+                            Text = searchResults[index];
+                            moveToEnd = true;
+                        }
                     }
                 }
             }
-            if (Event.current.keyCode == KeyCode.DownArrow)
+            else if (Event.current.keyCode == KeyCode.DownArrow)
             {
-                historyIndex++;
-                if (historyIndex > history.Count)
+                if (!typedSomething)
                 {
-                    historyIndex = history.Count;
-                    Text = "";
+                    index++;
+                    if (index > history.Count)
+                    {
+                        index = history.Count;
+                        Text = "";
+                        moveToEnd = true;
+                    }
+                    else
+                    {
+                        if (index >= 0 && index < history.Count)
+                        {
+                            Text = history[index];
+                            moveToEnd = true;
+                        }
+                    }
                 }
                 else
                 {
-                    if (historyIndex >= 0 && historyIndex < history.Count)
+                    index++;
+                    if (index >= searchResults.Count)
                     {
-                        Text = history[historyIndex];
+                        index = searchResults.Count;
+                        Text = "";
+                        moveToEnd = true;
+                    }
+                    else
+                    {
+                        if (index >= 0 && index < searchResults.Count)
+                        {
+                            Text = searchResults[index];
+                            moveToEnd = true;
+                        }
                     }
                 }
             }
         }
 
+
         //draw elements
+        Color oldColor = GUI.color;
+        GUI.color = Color.white;
         GUI.depth = -5;
+        int lineHeight = consoleStyle.fontSize + 4;
+
         GUILayout.Box(linesString, consoleStyle, GUILayout.Width(Screen.width));
         Rect lastControl = GUILayoutUtility.GetLastRect();
 
         //draw the typing field
-        GUI.depth = -5;
         GUI.Box(new Rect(0, lastControl.y + lastControl.height, Screen.width, 2), "", consoleStyle);
 
-        GUI.depth = -5;
         GUI.SetNextControlName(ConsoleControlName);
-        Text = GUI.TextField(new Rect(0, lastControl.y + lastControl.height + 1, Screen.width, 16), Text, consoleStyle);
+        string text = GUI.TextField(new Rect(0, lastControl.y + lastControl.height + 1, Screen.width, lineHeight), Text, consoleStyle);
         GUI.FocusControl(ConsoleControlName);
+
+        if (moveToEnd)
+        {
+            MoveToEnd();
+        }
+
+        //text changed, search
+        if (Text != text)
+        {
+            if (!typedSomething)
+            {
+                typedSomething = true;
+                index = -1;
+            }
+
+            if (string.IsNullOrEmpty(text) && typedSomething)
+            {
+                typedSomething = false;
+                index = history.Count;
+            }
+
+            Text = text;
+            Search(text);
+        }
+
+        //display the search box
+        GUI.color = new Color(1f, 1f, 1f, 0.4f);
+        GUI.Box(new Rect(0, lastControl.y + lastControl.height + 1 + lineHeight, Screen.width, searchResults.Count * lineHeight), string.Join("\n", searchResults), consoleStyle);
+        GUI.color = oldColor;
 
         //pressing enter to run command
         if (Event.current.type == EventType.KeyDown)
@@ -557,8 +664,9 @@ public class Console : MonoBehaviour
                 Add(Text, UserColor);
 
                 history.Add(Text);
-                historyIndex = history.Count;
+                index = history.Count;
 
+                Search(null);
                 Run(Text);
                 Event.current.Use();
 
