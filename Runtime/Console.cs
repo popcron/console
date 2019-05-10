@@ -64,20 +64,6 @@ public class Console : MonoBehaviour
         }
     }
 
-    private static string Text
-    {
-        get
-        {
-            string key = Application.buildGUID + SystemInfo.deviceUniqueIdentifier;
-            return PlayerPrefs.GetString(key + ".Popcron.Console.Text") + "";
-        }
-        set
-        {
-            string key = Application.buildGUID + SystemInfo.deviceUniqueIdentifier;
-            PlayerPrefs.SetString(key + ".Popcron.Console.Text", value);
-        }
-    }
-
     public static bool Open
     {
         get
@@ -104,6 +90,7 @@ public class Console : MonoBehaviour
         }
     }
 
+    private string input;
     private float deltaTime;
     private bool open;
     private int scroll;
@@ -290,7 +277,7 @@ public class Console : MonoBehaviour
     public static void Clear()
     {
         Scroll = 0;
-        Text = "";
+        Instance.input = "";
         Instance.text.Clear();
         Instance.history.Clear();
         Instance.UpdateText();
@@ -500,13 +487,13 @@ public class Console : MonoBehaviour
         {
             if (IsConsoleKey(Event.current.keyCode))
             {
-                Text = "";
+                input = "";
                 Open = !Open;
                 if (Open)
                 {
                     typedSomething = false;
                     index = history.Count;
-                    Search(Text);
+                    Search(input);
                 }
                 Event.current.Use();
             }
@@ -537,14 +524,14 @@ public class Console : MonoBehaviour
                     if (index < -1)
                     {
                         index = -1;
-                        Text = "";
+                        input = "";
                         moveToEnd = true;
                     }
                     else
                     {
                         if (index >= 0 && index < history.Count)
                         {
-                            Text = history[index];
+                            input = history[index];
                             moveToEnd = true;
                         }
                     }
@@ -555,14 +542,14 @@ public class Console : MonoBehaviour
                     if (index <= -1)
                     {
                         index = -1;
-                        Text = "";
+                        input = "";
                         moveToEnd = true;
                     }
                     else
                     {
                         if (index >= 0 && index < searchResults.Count)
                         {
-                            Text = searchResults[index];
+                            input = searchResults[index];
                             moveToEnd = true;
                         }
                     }
@@ -576,14 +563,14 @@ public class Console : MonoBehaviour
                     if (index > history.Count)
                     {
                         index = history.Count;
-                        Text = "";
+                        input = "";
                         moveToEnd = true;
                     }
                     else
                     {
                         if (index >= 0 && index < history.Count)
                         {
-                            Text = history[index];
+                            input = history[index];
                             moveToEnd = true;
                         }
                     }
@@ -594,14 +581,14 @@ public class Console : MonoBehaviour
                     if (index >= searchResults.Count)
                     {
                         index = searchResults.Count;
-                        Text = "";
+                        input = "";
                         moveToEnd = true;
                     }
                     else
                     {
                         if (index >= 0 && index < searchResults.Count)
                         {
-                            Text = searchResults[index];
+                            input = searchResults[index];
                             moveToEnd = true;
                         }
                     }
@@ -623,7 +610,7 @@ public class Console : MonoBehaviour
         GUI.Box(new Rect(0, lastControl.y + lastControl.height, Screen.width, 2), "", consoleStyle);
 
         GUI.SetNextControlName(ConsoleControlName);
-        string text = GUI.TextField(new Rect(0, lastControl.y + lastControl.height + 1, Screen.width, lineHeight), Text, consoleStyle);
+        string text = GUI.TextField(new Rect(0, lastControl.y + lastControl.height + 1, Screen.width, lineHeight), input, consoleStyle);
         GUI.FocusControl(ConsoleControlName);
 
         if (moveToEnd)
@@ -632,7 +619,7 @@ public class Console : MonoBehaviour
         }
 
         //text changed, search
-        if (Text != text)
+        if (input != text)
         {
             if (!typedSomething)
             {
@@ -646,7 +633,7 @@ public class Console : MonoBehaviour
                 index = history.Count;
             }
 
-            Text = text;
+            input = text;
             Search(text);
         }
 
@@ -661,16 +648,16 @@ public class Console : MonoBehaviour
             bool enter = Event.current.character == '\n' || Event.current.character == '\r';
             if (enter)
             {
-                Add(Text, UserColor);
+                Add(input, UserColor);
 
-                history.Add(Text);
+                history.Add(input);
                 index = history.Count;
 
                 Search(null);
-                Run(Text);
+                Run(input);
                 Event.current.Use();
 
-                Text = "";
+                input = "";
                 return;
             }
         }
