@@ -115,8 +115,6 @@ public class Console : MonoBehaviour
         instance = this;
         Parser.Initialize();
 
-        CreateStyle();
-
         //adds a listener for debug prints in editor
         Application.logMessageReceived += HandleLog;
     }
@@ -495,6 +493,8 @@ public class Console : MonoBehaviour
                     index = history.Count;
                     Search(input);
                 }
+
+                CreateStyle();
                 Event.current.Use();
             }
 

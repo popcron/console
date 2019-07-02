@@ -1,8 +1,10 @@
 {
-    "name": "Popcron.Console.Runtime",
+    "name": "Popcron.Console.Editor",
     "references": [],
     "optionalUnityReferences": [],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
