@@ -19,10 +19,9 @@ namespace Popcron.Console
         private MethodInfo set;
 
         private CommandAttribute attribute;
-        private List<Type> parameterTypes = new List<Type>();
-        private List<string> parameterNames = new List<string>();
         private Type owner;
         private List<string> names = new List<string>();
+        private List<object> parameters = new List<object>();
 
         public string Name
         {
@@ -60,7 +59,19 @@ namespace Popcron.Console
         {
             get
             {
-                return parameterNames;
+                List<string> names = new List<string>();
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    if (parameters[i] is FieldInfo field)
+                    {
+                        names.Add(field.Name);
+                    }
+                    else if (parameters[i] is ParameterInfo param)
+                    {
+                        names.Add(param.Name);
+                    }
+                }
+                return names;
             }
         }
 
@@ -127,11 +138,11 @@ namespace Popcron.Console
             if (method != null)
             {
                 //set parameters
-                ParameterInfo[] p = method.GetParameters();
-                for (int i = 0; i < p.Length; i++)
+                parameters.Clear();
+                ParameterInfo[] ps = method.GetParameters();
+                for (int i = 0; i < ps.Length; i++)
                 {
-                    parameterTypes.Add(p[i].ParameterType);
-                    parameterNames.Add(p[i].Name);
+                    parameters.Add(ps[i]);
                 }
             }
             else if (property != null)
@@ -147,14 +158,12 @@ namespace Popcron.Console
 
                 if (parameter != null)
                 {
-                    parameterTypes.Add(parameter.ParameterType);
-                    parameterNames.Add(parameter.Name);
+                    parameters.Add(parameter);
                 }
             }
             else if (field != null)
             {
-                parameterTypes.Add(field.FieldType);
-                parameterNames.Add(field.Name);
+                parameters.Add(field);
             }
         }
 
@@ -232,12 +241,38 @@ namespace Popcron.Console
         {
             convertedParameters = null;
 
-            //parameter amount mismatch
             bool isProperty = property != null && parametersGiven.Count <= 2;
             bool isField = field != null && parametersGiven.Count <= 2;
-            if (parametersGiven.Count != Parameters.Count && method != null)
+
+            //get the total amount of params required
+            int paramsRequired = 0;
+            int optionalParams = 0;
+            for (int i = 0; i < parameters.Count; i++)
             {
-                return false;
+                if (parameters[i] is FieldInfo field)
+                {
+                    paramsRequired++;
+                }
+                else if (parameters[i] is ParameterInfo param)
+                {
+                    if (!param.IsOptional)
+                    {
+                        paramsRequired++;
+                    }
+                    else
+                    {
+                        optionalParams++;
+                    }
+                }
+            }
+
+            //parameter amount mismatch
+            if (method != null)
+            {
+                if (parametersGiven.Count < paramsRequired || parametersGiven.Count > paramsRequired + optionalParams)
+                {
+                    return false;
+                }
             }
 
             if (isProperty || isField)
@@ -250,12 +285,24 @@ namespace Popcron.Console
             }
 
             //try to infer the type from input parameters
-            convertedParameters = new object[parameterTypes.Count];
-            for (int i = 0; i < parameterTypes.Count; i++)
+            convertedParameters = new object[parameters.Count];
+            for (int i = 0; i < parameters.Count; i++)
             {
-                string parameter = parametersGiven[i];
-                Type parameterType = parameterTypes[i];
+                string parameter = null;
+                ParameterInfo param = parameters[i] as ParameterInfo;
+                FieldInfo field = parameters[i] as FieldInfo;
+                if (i >= parametersGiven.Count)
+                {
+                    //out of bounds, optional parameter
+                    param = parameters[i] as ParameterInfo;
+                    parameter = param.DefaultValue.ToString();
+                }
+                else
+                {
+                    parameter = parametersGiven[i];
+                }
 
+                Type parameterType = param?.ParameterType ?? field.FieldType;
                 Converter converter = Converter.GetConverter(parameterType);
                 if (converter == null)
                 {
