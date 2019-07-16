@@ -90,7 +90,7 @@ public class CommandsBuiltin
                 string extra = "";
                 if (property.canSetProperty) 
 				{
-					xtra += " [value]";
+					extra += " [value]";
 				}
                 text.AppendLine("\t\t" + property.name + extra);
             }
@@ -116,11 +116,11 @@ public class CommandsBuiltin
     [Command("help", "Outputs a list of all commands")]
     public static string Help()
     {
-		StringBuilder text = new StringBuilder();
-        text.AppendLine("All commands registered: ");
+		StringBuilder builder = new StringBuilder();
+        builder.AppendLine("All commands registered: ");
         foreach (Category category in Library.Categories)
         {
-            text.AppendLine("\t" + category.Name);
+            builder.AppendLine("\t" + category.Name);
             foreach (Command command in category.Commands)
             {
                 string text = string.Join("/", command.Names);
@@ -154,10 +154,10 @@ public class CommandsBuiltin
                     text = "@id " + text;
                 }
 
-                text.AppendLine("\t\t" + text);
+                builder.AppendLine("\t\t" + text);
             }
         }
-		return text.ToString();
+		return builder.ToString();
     }
 
     [Command("echo")]

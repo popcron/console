@@ -459,12 +459,12 @@ public class Console : MonoBehaviour
             {
                 if (command.Name.StartsWith(text))
                 {
-					string text = string.Join("/", command.Names);
+					string suggestionText = string.Join("/", command.Names);
 					if (command.Member is MethodInfo method)
 					{
 						foreach (var parameter in command.Parameters)
 						{
-							text += " <" + parameter + ">";
+							suggestionText += " <" + parameter + ">";
 						}
 					}
 					else if (command.Member is PropertyInfo property)
@@ -472,26 +472,25 @@ public class Console : MonoBehaviour
 						MethodInfo set = property.GetSetMethod();
 						if (set != null)
 						{
-							text += " [value]";
+							suggestionText += " [value]";
 						}
 					}
 					else if (command.Member is FieldInfo field)
 					{
-						text += " [value]";
+						suggestionText += " [value]";
 					}
 
 					if (command.Description != "")
 					{
-						text += " = " + command.Description;
+						suggestionText += " = " + command.Description;
 					}
 
 					if (!command.IsStatic)
 					{
-						text = "@id " + text;
+						suggestionText = "@id " + suggestionText;
 					}
 
-					text.AppendLine("\t\t" + text);
-                    searchResults.Add(text);
+                    searchResults.Add(suggestionText);
                 }
             }
         }
