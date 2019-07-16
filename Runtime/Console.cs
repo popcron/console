@@ -234,9 +234,8 @@ public class Console : MonoBehaviour
     }
 
     /// <summary>
-    /// Prints a log message
+    /// Prints a log message.
     /// </summary>
-    /// <param name="message"></param>
     public static void Print(object message)
     {
         string txt = GetStringFromObject(message);
@@ -246,9 +245,8 @@ public class Console : MonoBehaviour
     }
 
     /// <summary>
-    /// Prints a warning message
+    /// Prints a warning message.
     /// </summary>
-    /// <param name="message"></param>
     public static void Warn(object message)
     {
         string txt = GetStringFromObject(message);
@@ -258,9 +256,8 @@ public class Console : MonoBehaviour
     }
 
     /// <summary>
-    /// Prints an error message
+    /// Prints an error message.
     /// </summary>
-    /// <param name="message"></param>
     public static void Error(object message)
     {
         string txt = GetStringFromObject(message);
@@ -270,7 +267,7 @@ public class Console : MonoBehaviour
     }
 
     /// <summary>
-    /// Clears the console
+    /// Clears the console.
     /// </summary>
     public static void Clear()
     {
@@ -282,10 +279,8 @@ public class Console : MonoBehaviour
     }
 
     /// <summary>
-    /// Submit generic text to the console
+    /// Submit generic text to the console.
     /// </summary>
-    /// <param name="text"></param>
-    /// <param name="type"></param>
     public static void WriteLine(object text, LogType type = LogType.Log)
     {
         if (type == LogType.Log)
@@ -303,10 +298,8 @@ public class Console : MonoBehaviour
     }
 
     /// <summary>
-    /// Runs a single command
+    /// Runs a single command.
     /// </summary>
-    /// <param name="command"></param>
-    /// <param name="gameBehaviour"></param>
     public static async void Run(string command)
     {
         //run
@@ -332,10 +325,8 @@ public class Console : MonoBehaviour
     }
 
     /// <summary>
-    /// Runs a list of commands
+    /// Runs a list of commands.
     /// </summary>
-    /// <param name="commands"></param>
-    /// <param name="gameBehaviour"></param>
     public static void Run(List<string> commands)
     {
         if (commands == null) return;
@@ -420,6 +411,12 @@ public class Console : MonoBehaviour
     {
         if (CommandsBuiltin.ShowFPS)
         {
+			//style doesnt exist, ensure one exists
+			if (fpsCounterStyle == null)
+			{
+				CreateStyle();
+			}
+			
             float msec = deltaTime * 1000f;
             float fps = 1f / deltaTime;
             string text = string.Format("{0:0.0} ms ({1:0.} fps)", msec, fps);
@@ -451,15 +448,50 @@ public class Console : MonoBehaviour
     {
         //search through all commands
         searchResults.Clear();
-        if (string.IsNullOrEmpty(text)) return;
-
+        if (string.IsNullOrEmpty(text)) 
+		{
+			return;
+		}
+		
         foreach (Category category in Library.Categories)
         {
             foreach (Command command in category.Commands)
             {
                 if (command.Name.StartsWith(text))
                 {
-                    searchResults.Add(command.Name);
+					string text = string.Join("/", command.Names);
+					if (command.Member is MethodInfo method)
+					{
+						foreach (var parameter in command.Parameters)
+						{
+							text += " <" + parameter + ">";
+						}
+					}
+					else if (command.Member is PropertyInfo property)
+					{
+						MethodInfo set = property.GetSetMethod();
+						if (set != null)
+						{
+							text += " [value]";
+						}
+					}
+					else if (command.Member is FieldInfo field)
+					{
+						text += " [value]";
+					}
+
+					if (command.Description != "")
+					{
+						text += " = " + command.Description;
+					}
+
+					if (!command.IsStatic)
+					{
+						text = "@id " + text;
+					}
+
+					text.AppendLine("\t\t" + text);
+                    searchResults.Add(text);
                 }
             }
         }
@@ -467,7 +499,6 @@ public class Console : MonoBehaviour
 
     private void MoveToEnd()
     {
-
         TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
         if (te != null)
         {

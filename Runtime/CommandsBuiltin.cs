@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
 using System.Reflection;
+using System.Text;
 
 using Popcron.Console;
 
@@ -8,7 +9,7 @@ using Popcron.Console;
 public class CommandsBuiltin
 {
     [Command("info", "Prints system information.")]
-    public static void PrintSystemInfo()
+    public static string PrintSystemInfo()
     {
         string deviceName = SystemInfo.deviceName;
         string deviceModel = SystemInfo.deviceModel;
@@ -29,23 +30,25 @@ public class CommandsBuiltin
         string gpuRam = (SystemInfo.graphicsMemorySize / 1000f) + " gb";
 
         int padding = 23;
-        Console.Print("<b>Device</b>");
-        Console.Print("\t<b>OS</b>".PadRight(padding) + os + "(" + osFamily + ")");
-        Console.Print("\t<b>RAM</b>".PadRight(padding) + ram);
-        Console.Print("\t<b>Name</b>".PadRight(padding) + deviceName);
-        Console.Print("\t<b>Model</b>".PadRight(padding) + deviceModel);
-        Console.Print("\t<b>Type</b>".PadRight(padding) + deviceType);
-        Console.Print("\t<b>Unique ID</b>".PadRight(padding) + id);
+		StringBuilder text = new StringBuilder();
+        text.AppendLine("<b>Device</b>");
+        text.AppendLine("\t<b>OS</b>".PadRight(padding) + os + "(" + osFamily + ")");
+        text.AppendLine("\t<b>RAM</b>".PadRight(padding) + ram);
+        text.AppendLine("\t<b>Name</b>".PadRight(padding) + deviceName);
+        text.AppendLine("\t<b>Model</b>".PadRight(padding) + deviceModel);
+        text.AppendLine("\t<b>Type</b>".PadRight(padding) + deviceType);
+        text.AppendLine("\t<b>Unique ID</b>".PadRight(padding) + id);
 
-        Console.Print("<b>CPU</b>");
-        Console.Print("\t<b>Name</b>".PadRight(padding) + cpuName);
-        Console.Print("\t<b>Processors</b>".PadRight(padding) + cpuCount);
-        Console.Print("\t<b>Frequency</b>".PadRight(padding) + SystemInfo.processorFrequency);
+        text.AppendLine("<b>CPU</b>");
+        text.AppendLine("\t<b>Name</b>".PadRight(padding) + cpuName);
+        text.AppendLine("\t<b>Processors</b>".PadRight(padding) + cpuCount);
+        text.AppendLine("\t<b>Frequency</b>".PadRight(padding) + SystemInfo.processorFrequency);
 
-        Console.Print("<b>GPU</b>");
-        Console.Print("\t<b>Name</b>".PadRight(padding) + gpuName);
-        Console.Print("\t<b>Vendor</b>".PadRight(padding) + gpuVendor);
-        Console.Print("\t<b>Memory</b>".PadRight(padding) + gpuRam);
+        text.AppendLine("<b>GPU</b>");
+        text.AppendLine("\t<b>Name</b>".PadRight(padding) + gpuName);
+        text.AppendLine("\t<b>Vendor</b>".PadRight(padding) + gpuVendor);
+        text.AppendLine("\t<b>Memory</b>".PadRight(padding) + gpuRam);
+		return text.ToString();
     }
 
     [Command("show fps")]
@@ -71,45 +74,53 @@ public class CommandsBuiltin
     }
 
     [Command("owners", "Lists all instance command owners.")]
-    public static void Owners()
+    public static string Owners()
     {
+		StringBuilder text = new StringBuilder();
         foreach (Owner owner in Parser.Owners)
         {
             Console.Print("\t" + owner.id + " = " + owner.owner);
             foreach (Owner.OwnerMember method in owner.methods)
             {
                 string parameters = "";
-                Console.Print("\t\t" + method.name + parameters);
+                text.AppendLine("\t\t" + method.name + parameters);
             }
             foreach (Owner.OwnerMember property in owner.properties)
             {
                 string extra = "";
-                if (property.canSetProperty) extra += " [value]";
-                Console.Print("\t\t" + property.name + extra);
+                if (property.canSetProperty) 
+				{
+					xtra += " [value]";
+				}
+                text.AppendLine("\t\t" + property.name + extra);
             }
             foreach (var field in owner.fields)
             {
-                Console.Print("\t\t" + field.name + " = " + field.Value);
+                text.AppendLine("\t\t" + field.name + " = " + field.Value);
             }
         }
+		return text.ToString();
     }
 
     [Command("converters", "Lists all type converters.")]
-    public static void Converters()
+    public static string Converters()
     {
+		StringBuilder text = new StringBuilder();
         foreach (Converter converter in Converter.Converters)
         {
-            Console.Print("\t" + converter.GetType() + " (" + converter.Type + ")");
+            text.AppendLine("\t" + converter.GetType() + " (" + converter.Type + ")");
         }
+		return text.ToString();
     }
 
     [Command("help", "Outputs a list of all commands")]
-    public static void Help()
+    public static string Help()
     {
-        Console.Print("All commands registered: ");
+		StringBuilder text = new StringBuilder();
+        text.AppendLine("All commands registered: ");
         foreach (Category category in Library.Categories)
         {
-            Console.Print("\t" + category.Name);
+            text.AppendLine("\t" + category.Name);
             foreach (Command command in category.Commands)
             {
                 string text = string.Join("/", command.Names);
@@ -143,14 +154,15 @@ public class CommandsBuiltin
                     text = "@id " + text;
                 }
 
-                Console.Print("\t\t" + text);
+                text.AppendLine("\t\t" + text);
             }
         }
+		return text.ToString();
     }
 
     [Command("echo")]
-    public static void Echo(string text)
+    public static string Echo(string text)
     {
-        Console.Print(text);
+        return text;
     }
 }
