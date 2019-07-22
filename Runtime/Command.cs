@@ -309,25 +309,30 @@ namespace Popcron.Console
                     Converter converter = Converter.GetConverter(parameterType);
                     if (converter == null)
                     {
-                        throw new ConverterNotFoundException("No converter for type " + parameterType + " was found");
+                        throw new ConverterNotFoundException("No converter for type " + parameterType.Name + " was found");
                     }
 
                     propValue = converter.Convert(parameter);
+
+                    //couldnt get a value
+                    if (propValue == null)
+                    {
+                        throw new FailedToConvertException("Failed to convert " + parameter + " to type " + parameterType.Name + " using " + converter.GetType().Name);
+                    }
                 }
                 else
                 {
                     //manually convert here if its an enum
                     propValue = Enum.Parse(parameterType, parameter);
+
+                    //couldnt get a value
+                    if (propValue == null)
+                    {
+                        throw new FailedToConvertException("Failed to parse " + parameter + " to " + parameterType.Name);
+                    }
                 }
 
-                if (propValue == null)
-                {
-                    throw new FailedToConvertException("Failed to convert " + parameter + " to type " + parameterType + " using " + converter.GetType().Name);
-                }
-                else
-                {
-                    convertedParameters[i] = propValue;
-                }
+                convertedParameters[i] = propValue;
             }
 
             return true;
