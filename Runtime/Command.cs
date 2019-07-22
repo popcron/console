@@ -302,17 +302,27 @@ namespace Popcron.Console
                     parameter = parametersGiven[i];
                 }
 
+                object propValue = null;
                 Type parameterType = param?.ParameterType ?? field.FieldType;
-                Converter converter = Converter.GetConverter(parameterType);
-                if (converter == null)
+                if (!parameterType.IsEnum)
                 {
-                    throw new ConverterNotFoundException("No converter for type " + parameterType + " was found");
+                    Converter converter = Converter.GetConverter(parameterType);
+                    if (converter == null)
+                    {
+                        throw new ConverterNotFoundException("No converter for type " + parameterType + " was found");
+                    }
+
+                    propValue = converter.Convert(parameter);
+                }
+                else
+                {
+                    //manually convert here if its an enum
+                    propValue = Enum.Parse(parameterType, parameter);
                 }
 
-                object propValue = converter.Convert(parameter);
                 if (propValue == null)
                 {
-                    throw new FailedToConvertException("Failed to convert " + parameter + " to type " + parameterType + " using " + converter.GetType());
+                    throw new FailedToConvertException("Failed to convert " + parameter + " to type " + parameterType + " using " + converter.GetType().Name);
                 }
                 else
                 {
