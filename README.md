@@ -63,6 +63,15 @@ To call this command from the console, you call the method exactly as its writen
 ### Troubleshooting
 To debug the instance methods, the parser contains a list of all registered owners in the `Parser.Owners` list.
 
+If you notice the console showing unescaped color tags, then it means that one of the parameter names is one of the built-in rich text tags. To fix it, rename the parameters such that they don't use the following keywords:
+- a
+- b
+- i
+- size
+- color
+- material
+- quad
+
 ## Examples
 To create a simple command, add a `Command` attribute to your method.
 
@@ -153,10 +162,10 @@ Add `"com.popcron.console": "https://github.com/popcron/console.git"` to your `m
 - **It doesn't show up.**
 Press ~.
 - **I pressed it, it still doesn't show up!**
-Invoke the `Console.Initialize()` method, or any of the static methods/properties.
+Invoke the `Console.Initialize()` method, or any of the static methods/properties once in the game.
 - **How do I change the key to open the console?**
 Change the `Console.Key` property.
-- **I want to use the original console that's included.**
+- **I want to use the original system console that's included.**
 If you want to reference the "original console", you can do so by referencing the namespace: `System.Console.WriteLine("wee")`.
 - **Can I use properties as commands?**
 Yes.

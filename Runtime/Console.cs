@@ -1,10 +1,9 @@
-using System;
-using System.Reflection;
-using System.Collections.Generic;
-using UnityEngine;
-
 using Popcron.Console;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
+using UnityEngine;
 
 [AddComponentMenu("")]
 public class Console : MonoBehaviour
@@ -142,7 +141,7 @@ public class Console : MonoBehaviour
     //creates a style to be used in the gui calls
     private void CreateStyle()
     {
-        Font font = GetFont("MonospaceTypewriter");
+        Font font = GetFont("Hack-Regular");
 
         Texture2D pixel = Pixel;
         consoleStyle = new GUIStyle
@@ -196,7 +195,10 @@ public class Console : MonoBehaviour
 
     private static string GetStringFromObject(object message)
     {
-        if (message == null) return null;
+        if (message == null)
+        {
+            return null;
+        }
 
         if (message is List<byte> listOfBytes)
         {
@@ -240,7 +242,10 @@ public class Console : MonoBehaviour
     public static void Print(object message)
     {
         string txt = GetStringFromObject(message);
-        if (txt == null) return;
+        if (txt == null)
+        {
+            return;
+        }
 
         Instance.Add(txt, PrintColor);
     }
@@ -251,7 +256,10 @@ public class Console : MonoBehaviour
     public static void Warn(object message)
     {
         string txt = GetStringFromObject(message);
-        if (txt == null) return;
+        if (txt == null)
+        {
+            return;
+        }
 
         Instance.Add(txt, WarningColor);
     }
@@ -262,7 +270,10 @@ public class Console : MonoBehaviour
     public static void Error(object message)
     {
         string txt = GetStringFromObject(message);
-        if (txt == null) return;
+        if (txt == null)
+        {
+            return;
+        }
 
         Instance.Add(txt, ErrorColor);
     }
@@ -305,7 +316,10 @@ public class Console : MonoBehaviour
     {
         //run
         object result = await Parser.Run(command);
-        if (result == null) return;
+        if (result == null)
+        {
+            return;
+        }
 
         if (result is Exception exception)
         {
@@ -330,11 +344,14 @@ public class Console : MonoBehaviour
     /// </summary>
     public static void Run(List<string> commands)
     {
-        if (commands == null) return;
-
-        foreach (var command in commands)
+        if (commands == null)
         {
-            Run(command);
+            return;
+        }
+
+        for (int i = 0; i < commands.Count; i++)
+        {
+            Run(commands[i]);
         }
     }
 
@@ -352,9 +369,9 @@ public class Console : MonoBehaviour
             lines.Add(str);
         }
 
-        foreach (var line in lines)
+        for (int i = 0; i < lines.Count; i++)
         {
-            text.Add("<color=" + color + ">" + line + "</color>");
+            text.Add("<color=" + color + ">" + lines[i] + "</color>");
             if (text.Count > HistorySize)
             {
                 text.RemoveAt(0);
@@ -380,9 +397,18 @@ public class Console : MonoBehaviour
         for (int i = 0; i < text.Count; i++)
         {
             int index = i + Scroll;
-            if (index < 0) continue;
-            if (index >= text.Count) continue;
-            if (string.IsNullOrEmpty(text[index])) break;
+            if (index < 0)
+            {
+                continue;
+            }
+            else if (index >= text.Count)
+            {
+                continue;
+            }
+            else if (string.IsNullOrEmpty(text[index]))
+            {
+                break;
+            }
 
             lines[lineIndex] = (text[index]);
 
@@ -390,7 +416,10 @@ public class Console : MonoBehaviour
             lines[lineIndex] = lines[lineIndex].Replace("\t", "    ");
 
             lineIndex++;
-            if (lineIndex == MaxLines) break;
+            if (lineIndex == MaxLines)
+            {
+                break;
+            }
         }
 
         linesString = string.Join("\n", lines);
@@ -412,12 +441,12 @@ public class Console : MonoBehaviour
     {
         if (CommandsBuiltin.ShowFPS)
         {
-			//style doesnt exist, ensure one exists
-			if (fpsCounterStyle == null)
-			{
-				CreateStyle();
-			}
-			
+            //style doesnt exist, ensure one exists
+            if (fpsCounterStyle == null)
+            {
+                CreateStyle();
+            }
+
             float msec = deltaTime * 1000f;
             float fps = 1f / deltaTime;
             string text = string.Format("{0:0.0} ms ({1:0.} fps)", msec, fps);
@@ -428,68 +457,85 @@ public class Console : MonoBehaviour
 
     private bool IsConsoleKey(KeyCode key)
     {
-        if (key == KeyCode.BackQuote) return true;
-        if (key == KeyCode.Tilde) return true;
-
-        return false;
+        if (key == KeyCode.BackQuote)
+        {
+            return true;
+        }
+        else if (key == KeyCode.Tilde)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private bool IsConsoleChar(char character)
     {
-        if (character == '`') return true;
-        if (character == '~') return true;
-
-        //sweedish/fn keyboard
-        if (character == '§') return true;
-
-        return false;
+        if (character == '`')
+        {
+            return true;
+        }
+        else if (character == '~')
+        {
+            return true;
+        }
+        else if (character == '§')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private void Search(string text)
     {
         //search through all commands
         searchResults.Clear();
-        if (string.IsNullOrEmpty(text)) 
-		{
-			return;
-		}
-		
+        if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
         foreach (Category category in Library.Categories)
         {
             foreach (Command command in category.Commands)
             {
                 if (command.Name.StartsWith(text))
                 {
-					string suggestionText = string.Join("/", command.Names);
-					if (command.Member is MethodInfo method)
-					{
-						foreach (var parameter in command.Parameters)
-						{
-							suggestionText += " <" + parameter + ">";
-						}
-					}
-					else if (command.Member is PropertyInfo property)
-					{
-						MethodInfo set = property.GetSetMethod();
-						if (set != null)
-						{
-							suggestionText += " [value]";
-						}
-					}
-					else if (command.Member is FieldInfo field)
-					{
-						suggestionText += " [value]";
-					}
+                    string suggestionText = string.Join("/", command.Names);
+                    if (command.Member is MethodInfo method)
+                    {
+                        foreach (var parameter in command.Parameters)
+                        {
+                            suggestionText += " <" + parameter + ">";
+                        }
+                    }
+                    else if (command.Member is PropertyInfo property)
+                    {
+                        MethodInfo set = property.GetSetMethod();
+                        if (set != null)
+                        {
+                            suggestionText += " [value]";
+                        }
+                    }
+                    else if (command.Member is FieldInfo field)
+                    {
+                        suggestionText += " [value]";
+                    }
 
-					if (command.Description != "")
-					{
-						suggestionText += " = " + command.Description;
-					}
+                    if (command.Description != "")
+                    {
+                        suggestionText += " = " + command.Description;
+                    }
 
-					if (!command.IsStatic)
-					{
-						suggestionText = "@id " + suggestionText;
-					}
+                    if (!command.IsStatic)
+                    {
+                        suggestionText = "@id " + suggestionText;
+                    }
 
                     searchResults.Add(suggestionText);
                 }
@@ -502,7 +548,7 @@ public class Console : MonoBehaviour
         TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
         if (te != null)
         {
-            te.MoveCursorToPosition(new Vector2(5555, 5555));
+            te.MoveCursorToPosition(new Vector2(int.MaxValue, int.MaxValue));
         }
     }
 
@@ -529,12 +575,18 @@ public class Console : MonoBehaviour
                 Event.current.Use();
             }
 
-            if (IsConsoleChar(Event.current.character)) return;
+            if (IsConsoleChar(Event.current.character))
+            {
+                return;
+            }
         }
 
         //dont show the console if it shouldnt be open
         //duh
-        if (!Open) return;
+        if (!Open)
+        {
+            return;
+        }
 
         //view scrolling
         if (Event.current.type == EventType.ScrollWheel)
@@ -627,7 +679,6 @@ public class Console : MonoBehaviour
             }
         }
 
-
         //draw elements
         Color oldColor = GUI.color;
         GUI.color = Color.white;
@@ -689,6 +740,7 @@ public class Console : MonoBehaviour
                 Event.current.Use();
 
                 input = "";
+                typedSomething = false;
                 return;
             }
         }

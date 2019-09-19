@@ -1,19 +1,19 @@
 fileFormatVersion: 2
-guid: 39a1b851a8bd28043adf12eb40cd7db3
+guid: 82cb337cb3ba2ee4aa3fbd57a77b72c2
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
-  fontSize: 12
+  fontSize: 16
   forceTextureCase: -2
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: MonospaceTypewriter
+  fontName: Hack
   fontNames:
-  - MonospaceTypewriter
+  - Hack
   fallbackFontReferences: []
   customCharacters: 
-  fontRenderingMode: 3
+  fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
