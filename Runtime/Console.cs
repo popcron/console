@@ -8,8 +8,15 @@ using UnityEngine;
 [AddComponentMenu("")]
 public class Console : MonoBehaviour
 {
-    private const int HistorySize = 200;
+    private const int HistorySize = 400;
 
+    public delegate void OnPrint(string text, LogType type);
+    
+    /// <summary>
+    /// Gets executed after a message is added to the console window.
+    /// </summary>
+    public static OnPrint onPrint;
+    
     private const string ConsoleControlName = "ControlField";
     private const string PrintColor = "white";
     private const string WarningColor = "orange";
@@ -200,7 +207,11 @@ public class Console : MonoBehaviour
             return null;
         }
 
-        if (message is List<byte> listOfBytes)
+        if (message is string)
+        {
+            return message as string;
+        }
+        else if (message is List<byte> listOfBytes)
         {
             StringBuilder builder = new StringBuilder(listOfBytes.Count * 5);
             int spacing = 25;
@@ -295,18 +306,27 @@ public class Console : MonoBehaviour
     /// </summary>
     public static void WriteLine(object text, LogType type = LogType.Log)
     {
+        string stringText = GetStringFromObject(text);
+        if (stringText == null)
+        {
+            return;
+        }
+        
         if (type == LogType.Log)
         {
-            Print(text);
+            Print(stringText);
         }
         else if (type == LogType.Error || type == LogType.Assert || type == LogType.Exception)
         {
-            Error(text);
+            Error(stringText);
         }
         else if (type == LogType.Warning)
         {
-            Warn(text);
+            Warn(stringText);
         }
+        
+        //invoke the event
+        onPrint?.Invoke(stringText, type);
     }
 
     /// <summary>
