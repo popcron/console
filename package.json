@@ -1,7 +1,7 @@
 {
     "name": "com.popcron.console",
     "displayName": "Popcron Console",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "unity": "2018.3",
     "description": "Command parsing API."
 }
