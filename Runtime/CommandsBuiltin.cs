@@ -18,7 +18,7 @@ public class CommandsBuiltin
 
         string os = SystemInfo.operatingSystem;
         OperatingSystemFamily osFamily = SystemInfo.operatingSystemFamily;
-        string ram = (SystemInfo.systemMemorySize / 1000f) + " gb";
+        string ram = (SystemInfo.systemMemorySize / 1024f) + " GiB";
 
         string cpuName = SystemInfo.processorType;
         int cpuCount = SystemInfo.processorCount;
@@ -27,7 +27,7 @@ public class CommandsBuiltin
         GraphicsDeviceType gpuType = SystemInfo.graphicsDeviceType;
         string gpuName = SystemInfo.graphicsDeviceName;
         string gpuVendor = SystemInfo.graphicsDeviceVendor;
-        string gpuRam = (SystemInfo.graphicsMemorySize / 1000f) + " gb";
+        string gpuRam = (SystemInfo.graphicsMemorySize / 1024f) + " GiB";
 
         int padding = 23;
 		StringBuilder text = new StringBuilder();
