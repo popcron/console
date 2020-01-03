@@ -98,7 +98,7 @@ namespace Popcron.Console
             {
                 bool nameMatch = false;
                 string commandInput = null;
-                foreach (var name in command.Names)
+                foreach (string name in command.Names)
                 {
                     if (input.StartsWith(name))
                     {
@@ -182,7 +182,10 @@ namespace Popcron.Console
             return null;
         }
 
-        private static List<string> GetParameters(string input)
+        /// <summary>
+        /// Returns a list of strings separated by a space from this text.
+        /// </summary>
+        public static List<string> GetParameters(string input)
         {
             List<string> parameters = Regex.Matches(input, @"[\""].+?[\""]|[^ ]+").Cast<Match>().Select(x => x.Value).ToList();
             for (int i = 0; i < parameters.Count; i++)
@@ -192,6 +195,7 @@ namespace Popcron.Console
                     parameters[i] = parameters[i].TrimStart('\"').TrimEnd('\"');
                 }
             }
+
             return parameters;
         }
     }

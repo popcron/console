@@ -11,12 +11,12 @@ public class Console : MonoBehaviour
     private const int HistorySize = 400;
 
     public delegate void OnPrint(string text, LogType type);
-    
+
     /// <summary>
     /// Gets executed after a message is added to the console window.
     /// </summary>
     public static OnPrint onPrint;
-    
+
     private const string ConsoleControlName = "ControlField";
     private const string PrintColor = "white";
     private const string WarningColor = "orange";
@@ -71,6 +71,9 @@ public class Console : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Is the console window currently open?
+    /// </summary>
     public static bool Open
     {
         get
@@ -91,8 +94,16 @@ public class Console : MonoBehaviour
         }
         set
         {
-            if (value < 0) value = 0;
-            if (value >= HistorySize) value = HistorySize - 1;
+            if (value < 0)
+            {
+                value = 0;
+            }
+
+            if (value >= HistorySize)
+            {
+                value = HistorySize - 1;
+            }
+
             Instance.scroll = value;
         }
     }
@@ -105,7 +116,7 @@ public class Console : MonoBehaviour
     private int lastMaxLines;
     private List<string> text = new List<string>();
     private List<string> history = new List<string>();
-    private List<string> searchResults = new List<string>();
+    private List<SearchResult> searchResults = new List<SearchResult>();
     private string linesString;
     private bool typedSomething;
     private GUIStyle consoleStyle;
@@ -311,7 +322,7 @@ public class Console : MonoBehaviour
         {
             return;
         }
-        
+
         if (type == LogType.Log)
         {
             Print(stringText);
@@ -324,7 +335,7 @@ public class Console : MonoBehaviour
         {
             Warn(stringText);
         }
-        
+
         //invoke the event
         onPrint?.Invoke(stringText, type);
     }
@@ -471,7 +482,11 @@ public class Console : MonoBehaviour
             float fps = 1f / deltaTime;
             string text = string.Format("{0:0.0} ms ({1:0.} fps)", msec, fps);
             Rect rect = new Rect(Screen.width - 100, 0, 100, 0);
+
+            int oldDepth = GUI.depth;
+            GUI.depth = -4000;
             GUI.Label(rect, text, fpsCounterStyle);
+            GUI.depth = oldDepth;
         }
     }
 
@@ -511,6 +526,36 @@ public class Console : MonoBehaviour
         }
     }
 
+    private bool Matches(string text, Command command)
+    {
+        if (command.Name.StartsWith(text))
+        {
+            return true;
+        }
+        else
+        {
+            //user typed in more than the command name, so check using the args
+            List<string> args = Parser.GetParameters(text);
+            int userArgs = args.Count;
+            if (userArgs > 0)
+            {
+                //check if the first arg is the command itself and that the args length is ok
+                if (args[0] == command.Name && userArgs - 1 <= command.Parameters.Count)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
     private void Search(string text)
     {
         //search through all commands
@@ -520,18 +565,28 @@ public class Console : MonoBehaviour
             return;
         }
 
+        //fill in the suggestion text
+        StringBuilder textBuilder = new StringBuilder();
         foreach (Category category in Library.Categories)
         {
             foreach (Command command in category.Commands)
             {
-                if (command.Name.StartsWith(text))
+                if (Matches(text, command))
                 {
-                    string suggestionText = string.Join("/", command.Names);
-                    if (command.Member is MethodInfo method)
+                    textBuilder.Clear();
+
+                    //not static, so show that it needs an @id
+                    if (!command.IsStatic)
                     {
-                        foreach (var parameter in command.Parameters)
+                        textBuilder.Append("@id ");
+                    }
+
+                    textBuilder.Append(string.Join("/", command.Names));
+                    if (command.Member is MethodInfo)
+                    {
+                        foreach (string parameter in command.Parameters)
                         {
-                            suggestionText += " <" + parameter + ">";
+                            textBuilder.Append(" <" + parameter + ">");
                         }
                     }
                     else if (command.Member is PropertyInfo property)
@@ -539,25 +594,21 @@ public class Console : MonoBehaviour
                         MethodInfo set = property.GetSetMethod();
                         if (set != null)
                         {
-                            suggestionText += " [value]";
+                            textBuilder.Append(" [value]");
                         }
                     }
-                    else if (command.Member is FieldInfo field)
+                    else if (command.Member is FieldInfo)
                     {
-                        suggestionText += " [value]";
+                        textBuilder.Append(" [value]");
                     }
 
-                    if (command.Description != "")
+                    if (!string.IsNullOrEmpty(command.Description))
                     {
-                        suggestionText += " = " + command.Description;
+                        textBuilder.Append(" = " + command.Description);
                     }
 
-                    if (!command.IsStatic)
-                    {
-                        suggestionText = "@id " + suggestionText;
-                    }
-
-                    searchResults.Add(suggestionText);
+                    SearchResult result = new SearchResult(textBuilder.ToString(), command.Name);
+                    searchResults.Add(result);
                 }
             }
         }
@@ -652,7 +703,7 @@ public class Console : MonoBehaviour
                     {
                         if (index >= 0 && index < searchResults.Count)
                         {
-                            input = searchResults[index];
+                            input = searchResults[index].command;
                             moveToEnd = true;
                         }
                     }
@@ -691,7 +742,7 @@ public class Console : MonoBehaviour
                     {
                         if (index >= 0 && index < searchResults.Count)
                         {
-                            input = searchResults[index];
+                            input = searchResults[index].command;
                             moveToEnd = true;
                         }
                     }
@@ -739,9 +790,22 @@ public class Console : MonoBehaviour
             Search(text);
         }
 
-        //display the search box
+        //display the search suggestions
         GUI.color = new Color(1f, 1f, 1f, 0.4f);
-        GUI.Box(new Rect(0, lastControl.y + lastControl.height + 1 + lineHeight, Screen.width, searchResults.Count * lineHeight), string.Join("\n", searchResults), consoleStyle);
+        StringBuilder suggestionsText = new StringBuilder();
+        for (int i = 0; i < searchResults.Count; i++)
+        {
+            if (i == searchResults.Count - 1)
+            {
+                suggestionsText.Append(searchResults[i].text);
+            }
+            else
+            {
+                suggestionsText.AppendLine(searchResults[i].text);
+            }
+        }
+
+        GUI.Box(new Rect(0, lastControl.y + lastControl.height + 1 + lineHeight, Screen.width, searchResults.Count * lineHeight), suggestionsText.ToString(), consoleStyle);
         GUI.color = oldColor;
 
         //pressing enter to run command
@@ -763,6 +827,19 @@ public class Console : MonoBehaviour
                 typedSomething = false;
                 return;
             }
+        }
+    }
+
+    [Serializable]
+    public class SearchResult
+    {
+        public string text;
+        public string command;
+
+        public SearchResult(string text, string command)
+        {
+            this.text = text;
+            this.command = command;
         }
     }
 }

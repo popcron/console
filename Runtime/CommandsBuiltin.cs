@@ -42,10 +42,11 @@ public class CommandsBuiltin
         text.AppendLine("<b>CPU</b>");
         text.AppendLine("\t<b>Name</b>".PadRight(padding) + cpuName);
         text.AppendLine("\t<b>Processors</b>".PadRight(padding) + cpuCount);
-        text.AppendLine("\t<b>Frequency</b>".PadRight(padding) + SystemInfo.processorFrequency);
+        text.AppendLine("\t<b>Frequency</b>".PadRight(padding) + cpuFrequency);
 
         text.AppendLine("<b>GPU</b>");
         text.AppendLine("\t<b>Name</b>".PadRight(padding) + gpuName);
+        text.AppendLine("\t<b>Type</b>".PadRight(padding) + gpuType);
         text.AppendLine("\t<b>Vendor</b>".PadRight(padding) + gpuVendor);
         text.AppendLine("\t<b>Memory</b>".PadRight(padding) + gpuRam);
 		return text.ToString();
@@ -56,13 +57,13 @@ public class CommandsBuiltin
     {
         get
         {
-            string key = Application.buildGUID + SystemInfo.deviceUniqueIdentifier;
-            return PlayerPrefs.GetInt(key + ".Popcron.Console.ShowFPS", 0) == 1;
+            string key = $"{Application.companyName}.{Application.productName}.Popcron.Console.ShowFPS";
+            return PlayerPrefs.GetInt(key, 0) == 1;
         }
         set
         {
-            string key = Application.buildGUID + SystemInfo.deviceUniqueIdentifier;
-            PlayerPrefs.SetInt(key + ".Popcron.Console.ShowFPS", value ? 1 : 0);
+            string key = $"{Application.companyName}.{Application.productName}.Popcron.Console.ShowFPS";
+            PlayerPrefs.SetInt(key, value ? 1 : 0);
         }
     }
 
@@ -94,7 +95,7 @@ public class CommandsBuiltin
 				}
                 text.AppendLine("\t\t" + property.name + extra);
             }
-            foreach (var field in owner.fields)
+            foreach (Owner.OwnerMember field in owner.fields)
             {
                 text.AppendLine("\t\t" + field.name + " = " + field.Value);
             }
