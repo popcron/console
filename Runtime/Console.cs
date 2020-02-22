@@ -123,7 +123,7 @@ public class Console : MonoBehaviour
     private string input;
     private float deltaTime;
     private bool open;
-    private KeyCode key;
+    private KeyCode key = KeyCode.Tilde;
     private int scroll;
     private int index;
     private int lastMaxLines;
