@@ -86,6 +86,18 @@ public class Console : MonoBehaviour
         }
     }
 
+    public static KeyCode Key
+    {
+        get
+        {
+            return Instance.key;
+        }
+        set
+        {
+            Instance.key = value;
+        }
+    }
+
     private static int Scroll
     {
         get
@@ -111,6 +123,7 @@ public class Console : MonoBehaviour
     private string input;
     private float deltaTime;
     private bool open;
+    private KeyCode key = KeyCode.Tilde;
     private int scroll;
     private int index;
     private int lastMaxLines;
@@ -490,13 +503,9 @@ public class Console : MonoBehaviour
         }
     }
 
-    private bool IsConsoleKey(KeyCode key)
+    private bool IsConsoleKey(KeyCode keyCode)
     {
-        if (key == KeyCode.BackQuote)
-        {
-            return true;
-        }
-        else if (key == KeyCode.Tilde)
+        if (keyCode == key)
         {
             return true;
         }
