@@ -123,7 +123,7 @@ public class Console : MonoBehaviour
     private string input;
     private float deltaTime;
     private bool open;
-    private KeyCode key = KeyCode.Tilde;
+    private KeyCode key = KeyCode.BackQuote;
     private int scroll;
     private int index;
     private int lastMaxLines;
@@ -634,6 +634,12 @@ public class Console : MonoBehaviour
 
     private void OnGUI()
     {
+		//just in case this is null, regen
+		if (consoleStyle == null)
+		{
+            CreateStyle();
+		}
+		
         //show fps
         ShowFPS();
         bool moveToEnd = false;
