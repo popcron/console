@@ -72,38 +72,45 @@ public class Console : MonoBehaviour
     }
 
     /// <summary>
+    /// The text that is currently given to the console window?
+    /// </summary>
+    public static string TextInput
+    {
+        get => Instance.textInput;
+        set => Instance.textInput = value;
+    }
+
+    /// <summary>
     /// Is the console window currently open?
     /// </summary>
+    public static bool IsOpen
+    {
+        get => Instance.open;
+        set => Instance.open = value;
+    }
+
+    [Obsolete("This is obsolete, use Console.IsOpen instead.")]
     public static bool Open
     {
-        get
-        {
-            return Instance.open;
-        }
-        set
-        {
-            Instance.open = value;
-        }
+        get => IsOpen;
+        set => IsOpen = value;
     }
 
+    /// <summary>
+    /// The key that should be used to open the console window.
+    /// </summary>
     public static KeyCode Key
     {
-        get
-        {
-            return Instance.key;
-        }
-        set
-        {
-            Instance.key = value;
-        }
+        get => Instance.key;
+        set => Instance.key = value;
     }
 
-    private static int Scroll
+    /// <summary>
+    /// The amount of lines that a single scroll should perform.
+    /// </summary>
+    public static int Scroll
     {
-        get
-        {
-            return Instance.scroll;
-        }
+        get => Instance.scroll;
         set
         {
             if (value < 0)
@@ -120,13 +127,16 @@ public class Console : MonoBehaviour
         }
     }
 
-    private string input;
+    private string textInput;
     private float deltaTime;
     private bool open;
     private KeyCode key = KeyCode.BackQuote;
     private int scroll;
     private int index;
     private int lastMaxLines;
+    private Type keyboardType;
+    private bool hasInputSystem = true;
+    private int framePressedOn;
     private List<string> text = new List<string>();
     private List<string> history = new List<string>();
     private List<SearchResult> searchResults = new List<SearchResult>();
@@ -220,7 +230,7 @@ public class Console : MonoBehaviour
     public static void Initialize()
     {
         //dumb
-        Open = false;
+        IsOpen = false;
         Run("info");
     }
 
@@ -319,7 +329,7 @@ public class Console : MonoBehaviour
     public static void Clear()
     {
         Scroll = 0;
-        Instance.input = "";
+        TextInput = "";
         Instance.text.Clear();
         Instance.history.Clear();
         Instance.UpdateText();
@@ -623,6 +633,9 @@ public class Console : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Moves the caret to the end of the text field.
+    /// </summary>
     private void MoveToEnd()
     {
         TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
@@ -632,14 +645,93 @@ public class Console : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns true if enter key was pressed.
+    /// </summary>
+    private bool CheckForEnter()
+    {
+        //try with input system if it exists
+        if (hasInputSystem)
+        {
+            if (keyboardType == null)
+            {
+                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                for (int a = 0; a < assemblies.Length; a++)
+                {
+                    Type[] types = assemblies[a].GetTypes();
+                    for (int t = 0; t < types.Length; t++)
+                    {
+                        if (types[t].FullName.Equals("UnityEngine.InputSystem.Keyboard"))
+                        {
+                            //found the keyboard type from the input system
+                            keyboardType = types[t];
+                            break;
+                        }
+                    }
+
+                    if (keyboardType != null)
+                    {
+                        break;
+                    }
+                }
+
+                //still null, so no input system
+                if (keyboardType == null)
+                {
+                    hasInputSystem = false;
+                    return false;
+                }
+            }
+
+            //get the static `current` property and the `enterKey` property
+            PropertyInfo current = keyboardType.GetProperty("current");
+            PropertyInfo enterKey = keyboardType.GetProperty("enterKey");
+
+            //get the value from it
+            object keyboardValue = current.GetValue(null);
+            if (keyboardValue != null)
+            {
+                //get the `wasPressedThisFrame` property from the base type
+                //enter Key is a KeyControl, which derives from ButtonControl, which has this property
+                object enterKeyValue = enterKey.GetValue(keyboardValue);
+                PropertyInfo wasPressedThisFrame = enterKeyValue.GetType().BaseType.GetProperty("wasPressedThisFrame");
+
+                //get the value from it
+                bool yay = (bool)wasPressedThisFrame.GetValue(enterKeyValue);
+                if (yay)
+                {
+                    if (framePressedOn != Time.frameCount)
+                    {
+                        framePressedOn = Time.frameCount;
+                        return yay;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        //try with the gui system
+        if (Event.current.isKey && Event.current.type == EventType.KeyDown)
+        {
+            bool enter = Event.current.character == '\n' || Event.current.character == '\r' || Event.current.keyCode == KeyCode.Return;
+            if (enter)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void OnGUI()
     {
-		//just in case this is null, regen
-		if (consoleStyle == null)
-		{
+        //just in case this is null, regen
+        if (consoleStyle == null)
+        {
             CreateStyle();
-		}
-		
+        }
+
         //show fps
         ShowFPS();
         bool moveToEnd = false;
@@ -648,13 +740,13 @@ public class Console : MonoBehaviour
         {
             if (IsConsoleKey(Event.current.keyCode))
             {
-                input = "";
-                Open = !Open;
-                if (Open)
+                TextInput = "";
+                IsOpen = !IsOpen;
+                if (IsOpen)
                 {
                     typedSomething = false;
                     index = history.Count;
-                    Search(input);
+                    Search(TextInput);
                 }
 
                 CreateStyle();
@@ -669,7 +761,7 @@ public class Console : MonoBehaviour
 
         //dont show the console if it shouldnt be open
         //duh
-        if (!Open)
+        if (!IsOpen)
         {
             return;
         }
@@ -693,14 +785,14 @@ public class Console : MonoBehaviour
                     if (index < -1)
                     {
                         index = -1;
-                        input = "";
+                        TextInput = "";
                         moveToEnd = true;
                     }
                     else
                     {
                         if (index >= 0 && index < history.Count)
                         {
-                            input = history[index];
+                            TextInput = history[index];
                             moveToEnd = true;
                         }
                     }
@@ -711,14 +803,14 @@ public class Console : MonoBehaviour
                     if (index <= -1)
                     {
                         index = -1;
-                        input = "";
+                        TextInput = "";
                         moveToEnd = true;
                     }
                     else
                     {
                         if (index >= 0 && index < searchResults.Count)
                         {
-                            input = searchResults[index].command;
+                            TextInput = searchResults[index].command;
                             moveToEnd = true;
                         }
                     }
@@ -732,14 +824,14 @@ public class Console : MonoBehaviour
                     if (index > history.Count)
                     {
                         index = history.Count;
-                        input = "";
+                        TextInput = "";
                         moveToEnd = true;
                     }
                     else
                     {
                         if (index >= 0 && index < history.Count)
                         {
-                            input = history[index];
+                            TextInput = history[index];
                             moveToEnd = true;
                         }
                     }
@@ -750,14 +842,14 @@ public class Console : MonoBehaviour
                     if (index >= searchResults.Count)
                     {
                         index = searchResults.Count;
-                        input = "";
+                        TextInput = "";
                         moveToEnd = true;
                     }
                     else
                     {
                         if (index >= 0 && index < searchResults.Count)
                         {
-                            input = searchResults[index].command;
+                            TextInput = searchResults[index].command;
                             moveToEnd = true;
                         }
                     }
@@ -778,7 +870,7 @@ public class Console : MonoBehaviour
         GUI.Box(new Rect(0, lastControl.y + lastControl.height, Screen.width, 2), "", consoleStyle);
 
         GUI.SetNextControlName(ConsoleControlName);
-        string text = GUI.TextField(new Rect(0, lastControl.y + lastControl.height + 1, Screen.width, lineHeight), input, consoleStyle);
+        string text = GUI.TextField(new Rect(0, lastControl.y + lastControl.height + 1, Screen.width, lineHeight), TextInput, consoleStyle);
         GUI.FocusControl(ConsoleControlName);
 
         if (moveToEnd)
@@ -787,7 +879,7 @@ public class Console : MonoBehaviour
         }
 
         //text changed, search
-        if (input != text)
+        if (TextInput != text)
         {
             if (!typedSomething)
             {
@@ -801,7 +893,7 @@ public class Console : MonoBehaviour
                 index = history.Count;
             }
 
-            input = text;
+            TextInput = text;
             Search(text);
         }
 
@@ -824,24 +916,19 @@ public class Console : MonoBehaviour
         GUI.color = oldColor;
 
         //pressing enter to run command
-        if (Event.current.type == EventType.KeyDown)
+        if (CheckForEnter())
         {
-            bool enter = Event.current.character == '\n' || Event.current.character == '\r';
-            if (enter)
-            {
-                Add(input, UserColor);
+            Add(TextInput, UserColor);
 
-                history.Add(input);
-                index = history.Count;
+            history.Add(TextInput);
+            index = history.Count;
 
-                Search(null);
-                Run(input);
-                Event.current.Use();
+            Search(null);
+            Run(TextInput);
+            Event.current.Use();
 
-                input = "";
-                typedSomething = false;
-                return;
-            }
+            TextInput = "";
+            typedSomething = false;
         }
     }
 
