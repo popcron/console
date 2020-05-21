@@ -165,6 +165,8 @@ Press ~.
 Invoke the `Console.Initialize()` method, or any of the static methods/properties once in the game.
 - **How do I change the key to open the console?**
 Change the `Console.Key` property.
+- **I'm not using the built-in input system, does it work with the new one?**
+Yes, if the new InputSystem is available, it will use that instead of the old one.
 - **I want to use the original system console that's included.**
 If you want to reference the "original console", you can do so by referencing the namespace: `System.Console.WriteLine("wee")`.
 - **Can I use properties as commands?**
