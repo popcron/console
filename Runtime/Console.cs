@@ -323,6 +323,14 @@ public class Console : MonoBehaviour
         Instance.Add(txt, ErrorColor);
     }
 
+    private static string Sanitize(string txt)
+    {
+        //remove any <tags> from the line and escape them
+        txt = txt.Replace('>', '˃');
+        txt = txt.Replace('>', '˂');
+        return txt;
+    }
+
     /// <summary>
     /// Clears the console.
     /// </summary>
@@ -425,7 +433,8 @@ public class Console : MonoBehaviour
 
         for (int i = 0; i < lines.Count; i++)
         {
-            text.Add("<color=" + color + ">" + lines[i] + "</color>");
+            string line = $"<color={color}>{lines[i]}</color>";
+            text.Add(line);
             if (text.Count > HistorySize)
             {
                 text.RemoveAt(0);
@@ -584,6 +593,28 @@ public class Console : MonoBehaviour
             return;
         }
 
+        //if it starts with a @, then concat
+        bool instanceOnly = false;
+        if (text.Length > 1 && text[0] == '@')
+        {
+            int index = text.IndexOf(' ');
+            if (index != -1)
+            {
+                //remove everything before the @id string
+                text = text.Substring(index + 1);
+                instanceOnly = true;
+                if (string.IsNullOrEmpty(text))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                text = null;
+                return;
+            }
+        }
+
         //fill in the suggestion text
         StringBuilder textBuilder = new StringBuilder();
         foreach (Category category in Library.Categories)
@@ -600,12 +631,17 @@ public class Console : MonoBehaviour
                         textBuilder.Append("@id ");
                     }
 
+                    if (instanceOnly && command.IsStatic)
+                    {
+                        continue;
+                    }
+
                     textBuilder.Append(string.Join("/", command.Names));
                     if (command.Member is MethodInfo)
                     {
                         foreach (string parameter in command.Parameters)
                         {
-                            textBuilder.Append(" <" + parameter + ">");
+                            textBuilder.Append(" ˂" + parameter + "˃");
                         }
                     }
                     else if (command.Member is PropertyInfo property)

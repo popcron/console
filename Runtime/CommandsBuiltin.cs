@@ -1,13 +1,14 @@
-﻿using UnityEngine;
-using UnityEngine.Rendering;
+﻿using Popcron.Console;
 using System.Reflection;
 using System.Text;
-
-using Popcron.Console;
+using UnityEngine;
+using UnityEngine.Rendering;
 
 [Category("Built in commands")]
 public class CommandsBuiltin
 {
+    private static string Indent = "    ";
+
     [Command("info", "Prints system information.")]
     public static string PrintSystemInfo()
     {
@@ -30,7 +31,7 @@ public class CommandsBuiltin
         string gpuRam = (SystemInfo.graphicsMemorySize / 1024f) + " GiB";
 
         int padding = 23;
-		StringBuilder text = new StringBuilder();
+        StringBuilder text = new StringBuilder();
         text.AppendLine("<b>Device</b>");
         text.AppendLine("\t<b>OS</b>".PadRight(padding) + os + "(" + osFamily + ")");
         text.AppendLine("\t<b>RAM</b>".PadRight(padding) + ram);
@@ -49,7 +50,7 @@ public class CommandsBuiltin
         text.AppendLine("\t<b>Type</b>".PadRight(padding) + gpuType);
         text.AppendLine("\t<b>Vendor</b>".PadRight(padding) + gpuVendor);
         text.AppendLine("\t<b>Memory</b>".PadRight(padding) + gpuRam);
-		return text.ToString();
+        return text.ToString();
     }
 
     [Command("show fps")]
@@ -77,59 +78,63 @@ public class CommandsBuiltin
     [Command("owners", "Lists all instance command owners.")]
     public static string Owners()
     {
-		StringBuilder text = new StringBuilder();
+        StringBuilder text = new StringBuilder();
         foreach (Owner owner in Parser.Owners)
         {
-            Console.Print("\t" + owner.id + " = " + owner.owner);
+            Console.Print(Indent + owner.id + " = " + owner.owner);
             foreach (Owner.OwnerMember method in owner.methods)
             {
                 string parameters = "";
-                text.AppendLine("\t\t" + method.name + parameters);
+                text.AppendLine(Indent + Indent + method.name + parameters);
             }
+
             foreach (Owner.OwnerMember property in owner.properties)
             {
                 string extra = "";
-                if (property.canSetProperty) 
-				{
-					extra += " [value]";
-				}
-                text.AppendLine("\t\t" + property.name + extra);
+                if (property.canSetProperty)
+                {
+                    extra += " [value]";
+                }
+
+                text.AppendLine(Indent + Indent + property.name + extra);
             }
+
             foreach (Owner.OwnerMember field in owner.fields)
             {
-                text.AppendLine("\t\t" + field.name + " = " + field.Value);
+                text.AppendLine(Indent + Indent + field.name + " = " + field.Value);
             }
         }
-		return text.ToString();
+        return text.ToString();
     }
 
     [Command("converters", "Lists all type converters.")]
     public static string Converters()
     {
-		StringBuilder text = new StringBuilder();
+        StringBuilder text = new StringBuilder();
         foreach (Converter converter in Converter.Converters)
         {
-            text.AppendLine("\t" + converter.GetType() + " (" + converter.Type + ")");
+            text.AppendLine(Indent + converter.GetType() + " (" + converter.Type + ")");
         }
-		return text.ToString();
+
+        return text.ToString();
     }
 
     [Command("help", "Outputs a list of all commands")]
     public static string Help()
     {
-		StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         builder.AppendLine("All commands registered: ");
         foreach (Category category in Library.Categories)
         {
-            builder.AppendLine("\t" + category.Name);
+            builder.AppendLine(Indent + category.Name);
             foreach (Command command in category.Commands)
             {
                 string text = string.Join("/", command.Names);
                 if (command.Member is MethodInfo method)
                 {
-                    foreach (var parameter in command.Parameters)
+                    foreach (string parameter in command.Parameters)
                     {
-                        text += " <" + parameter + ">";
+                        text += " ˂" + parameter + "˃";
                     }
                 }
                 else if (command.Member is PropertyInfo property)
@@ -155,10 +160,10 @@ public class CommandsBuiltin
                     text = "@id " + text;
                 }
 
-                builder.AppendLine("\t\t" + text);
+                builder.AppendLine(Indent + Indent + text);
             }
         }
-		return builder.ToString();
+        return builder.ToString();
     }
 
     [Command("echo")]
