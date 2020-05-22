@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace Popcron.Console
 {
@@ -17,7 +18,7 @@ namespace Popcron.Console
         public override object Convert(string value)
         {
             float result;
-            if (float.TryParse(value, out result))
+            if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result))
             {
                 return result;
             }
