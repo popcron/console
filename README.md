@@ -60,18 +60,6 @@ public class PlayerAmmo : MonoBehaviour
 To call this command from the console, you call the method exactly as its writen, with the addition of the `@id` prefix.
 `@player ammo 100`
 
-### Troubleshooting
-To debug the instance methods, the parser contains a list of all registered owners in the `Parser.Owners` list.
-
-If you notice the console showing unescaped color tags, then it means that one of the parameter names is one of the built-in rich text tags. To fix it, rename the parameters such that they don't use the following keywords:
-- a
-- b
-- i
-- size
-- color
-- material
-- quad
-
 ## Examples
 To create a simple command, add a `Command` attribute to your method.
 
