@@ -1,4 +1,5 @@
 ﻿using System;
+using static Popcron.Console.Parser;
 
 namespace Popcron.Console
 {
@@ -9,7 +10,7 @@ namespace Popcron.Console
 
         public CategoryAttribute(string name)
         {
-            this.name = name;
+            this.name = Sanitize(name);
         }
     }
 }

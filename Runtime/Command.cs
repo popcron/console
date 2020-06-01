@@ -123,8 +123,8 @@ namespace Popcron.Console
             this.owner = owner;
 
             //find alias attributes
-            var aliases = Member.GetAliases();
-            foreach (var alias in aliases)
+            AliasAttribute[] aliases = Member.GetAliases();
+            foreach (AliasAttribute alias in aliases)
             {
                 names.Add(alias.name);
             }
