@@ -326,8 +326,8 @@ public class Console : MonoBehaviour
     private static string Sanitize(string txt)
     {
         //remove any <tags> from the line and escape them
-        txt = txt.Replace('>', '˃');
-        txt = txt.Replace('>', '˂');
+        txt = txt.Replace('>', Parser.RightAngleBracket);
+        txt = txt.Replace('<', Parser.LeftAngleBracket);
         return txt;
     }
 
@@ -641,7 +641,7 @@ public class Console : MonoBehaviour
                     {
                         foreach (string parameter in command.Parameters)
                         {
-                            textBuilder.Append(" ˂" + parameter + "˃");
+                            textBuilder.Append(" " + Parser.LeftAngleBracket + parameter + Parser.RightAngleBracket);
                         }
                     }
                     else if (command.Member is PropertyInfo property)

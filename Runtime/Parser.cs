@@ -9,7 +9,23 @@ namespace Popcron.Console
 {
     public class Parser
     {
-        private const string ValidChars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'/!@#$%^&*()_+-=[]{};':\",.<>/";
+        //&lt; is escaped version of the < char
+
+        /// <summary>
+        /// A fake left angle bracket that looks like &lt; but isnt one
+        /// </summary>
+        public const char LeftAngleBracket = '˂';
+
+        /// <summary>
+        /// A fake right angle bracket that looks like > but isnt one
+        /// </summary>
+        public const char RightAngleBracket = '˃';
+        
+        /// <summary>
+        /// A string that contains all valid characters.
+        /// </summary>
+        public const string ValidChars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'/!@#$%^&*()_+-=[]{};':\",.˂˃/";
+
         private static StringBuilder stringBuilder = new StringBuilder();
         private static Dictionary<string, Owner> idToOwner = new Dictionary<string, Owner>();
 
@@ -111,7 +127,15 @@ namespace Popcron.Console
             for (int i = 0; i < input.Length; i++)
             {
                 char c = input[i];
-                if (ValidChars.Contains(c))
+                if (c == '<')
+                {
+                    stringBuilder.Append(LeftAngleBracket);
+                }
+                else if (c == '>')
+                {
+                    stringBuilder.Append(RightAngleBracket);
+                }
+                else if (ValidChars.Contains(c))
                 {
                     stringBuilder.Append(c);
                 }
@@ -153,7 +177,7 @@ namespace Popcron.Console
                     }
                 }
 
-                //name matches? oooh, ;) on on...
+                //name matches? oooh, ;) go on...
                 if (nameMatch)
                 {
                     string text = input.Replace(commandInput, "");
