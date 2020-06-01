@@ -952,7 +952,7 @@ public class Console : MonoBehaviour
         GUI.color = oldColor;
 
         //pressing enter to run command
-        if (CheckForEnter())
+        if (!string.IsNullOrEmpty(TextInput) && CheckForEnter())
         {
             Add(TextInput, UserColor);
 
