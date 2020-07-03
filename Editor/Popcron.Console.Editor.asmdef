@@ -1,7 +1,8 @@
 {
     "name": "Popcron.Console.Editor",
-    "references": [],
-    "optionalUnityReferences": [],
+    "references": [
+        "GUID:d187103b4bdd877429c736efbc905587"
+    ],
     "includePlatforms": [
         "Editor"
     ],
@@ -11,5 +12,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": []
+    "versionDefines": [],
+    "noEngineReferences": false
 }

@@ -20,11 +20,16 @@ namespace Popcron.Console
         /// A fake right angle bracket that looks like > but isnt one
         /// </summary>
         public const char RightAngleBracket = '˃';
-        
+
+        /// <summary>
+        /// Prefix to use when specifying instance commands with an ID.
+        /// </summary>
+        public const string IDPrefix = "@";
+
         /// <summary>
         /// A string that contains all valid characters.
         /// </summary>
-        public const string ValidChars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'/!@#$%^&*()_+-=[]{};':\",.˂˃/";
+        public const string ValidChars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'/!@#$%^&*()_+-=[]{};':\",.˂˃/?";
 
         private static StringBuilder stringBuilder = new StringBuilder();
         private static Dictionary<string, Owner> idToOwner = new Dictionary<string, Owner>();
@@ -68,13 +73,6 @@ namespace Popcron.Console
             ownerValue.FindMethods();
             ownerValue.FindProperties();
             ownerValue.FindFields();
-        }
-
-        public static void Initialize()
-        {
-            Library.FindCategories();
-            Library.FindCommands();
-            Converter.FindConverters();
         }
 
         /// <summary>
@@ -155,10 +153,10 @@ namespace Popcron.Console
             //if input starts with id flag
             //remove the id flag and store it separately
             string id = null;
-            if (input.StartsWith("@"))
+            if (input.StartsWith(IDPrefix))
             {
                 id = input.Substring(1, input.IndexOf(' ') - 1);
-                input = input.Replace("@" + id + " ", "");
+                input = input.Replace(IDPrefix + id + " ", "");
             }
 
             for (int c = 0; c < Library.Commands.Count; c++)
