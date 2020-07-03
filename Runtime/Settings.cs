@@ -113,7 +113,7 @@ namespace Popcron.Console
         public int scrollAmount = 3;
         public int historySize = 1024;
         public bool logToFile = true;
-        public bool disableOpenChecks = false;
+        public bool checkForOpenInput = true;
 
         [SerializeField]
         private string consoleChararacters = "`!~*^#\\Ё§";

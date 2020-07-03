@@ -705,7 +705,7 @@ namespace Popcron.Console
         /// </summary>
         private bool CheckForOpen()
         {
-            if (Settings.Current.disableOpenChecks)
+            if (!Settings.Current.checkForOpenInput)
             {
                 return false;
             }
