@@ -17,14 +17,7 @@ namespace Popcron.Console
         public delegate bool OnAboutToPrint(object obj, string text, LogType type);
         public delegate void OnPrinted(string text, LogType type);
 
-        /// <summary>
-        /// Gets executed after before a message is printed to the console.
-        /// </summary>
         public static OnAboutToPrint onAboutToPrint;
-
-        /// <summary>
-        /// Gets executed after a message is added to the console window.
-        /// </summary>
         public static OnPrinted onPrinted;
 
         private static StringBuilder suggestionsText = new StringBuilder();

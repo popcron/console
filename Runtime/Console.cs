@@ -9,6 +9,24 @@ using C = Popcron.Console.ConsoleWindow;
 public struct Console
 {
     /// <summary>
+    /// Gets executed after a message is added to the console window.
+    /// </summary>
+    public static C.OnPrinted OnPrinted
+    {
+        get => C.onPrinted;
+        set => C.onPrinted = value;
+    }
+
+    /// <summary>
+    /// Gets executed after before a message is printed to the console.
+    /// </summary>
+    public static C.OnAboutToPrint OnAboutToPrint
+    {
+        get => C.onAboutToPrint;
+        set => C.onAboutToPrint = value;
+    }
+
+    /// <summary>
     /// Read only list of commands that were submitted to the console.
     /// </summary>
     public static ReadOnlyCollection<string> History => C.History;
