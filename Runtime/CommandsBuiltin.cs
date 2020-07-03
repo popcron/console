@@ -198,14 +198,11 @@ public class CommandsBuiltin
             Console.WriteLine(indent + "<color=gray>" + transform.name + "</color>");
         }
 
-        Transform[] children = transform.GetComponentsInChildren<Transform>(true);
-        for (int i = 0; i < children.Length; i++)
+        int childCount = transform.childCount;
+        for (int i = 0; i < childCount; i++)
         {
-            Transform kid = children[i];
-            if (kid != transform)
-            {
-                PrintObjectAndKids(indent + Indent, kid);
-            }
+            Transform kid = transform.GetChild(i);
+            PrintObjectAndKids(indent + Indent, kid);
         }
     }
 }
