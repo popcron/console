@@ -1011,6 +1011,12 @@ namespace Popcron.Console
         /// </summary>
         public static ConsoleWindow GetOrCreate()
         {
+            //is this scene blacklisted?
+            if (Settings.Current.IsSceneBlacklisted())
+            {
+                return null;
+            }
+
             //find a console window component in this scene
             ConsoleWindow consoleWindow = FindObjectOfType<ConsoleWindow>();
             if (!consoleWindow)

@@ -166,8 +166,13 @@ namespace Popcron.Console
         [NonSerialized]
         private string exceptionColorHex;
 
-        public bool IsSceneBlacklisted(Scene scene)
+        /// <summary>
+        /// Is the current scene blacklisted and disallowed.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsSceneBlacklisted()
         {
+            Scene scene = SceneManager.GetActiveScene();
             for (int i = 0; i < blacklistedScenes.Count; i++)
             {
                 if (blacklistedScenes[i].Equals(scene.path))
