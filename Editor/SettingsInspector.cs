@@ -24,6 +24,7 @@ namespace Popcron.Console
             SerializedProperty scrollAmount = serializedObject.FindProperty("scrollAmount");
             SerializedProperty historySize = serializedObject.FindProperty("historySize");
             SerializedProperty logToFile = serializedObject.FindProperty("logToFile");
+            SerializedProperty disableOpenChecks = serializedObject.FindProperty("disableOpenChecks");
             SerializedProperty consoleChararacters = serializedObject.FindProperty("consoleChararacters");
             SerializedProperty blacklistedScenes = serializedObject.FindProperty("blacklistedScenes");
 
@@ -58,6 +59,7 @@ namespace Popcron.Console
                 EditorGUI.indentLevel--;
             }
 
+            EditorGUILayout.PropertyField(disableOpenChecks, new GUIContent("Dislabe built-in open checks"));
             EditorGUILayout.PropertyField(scrollAmount, new GUIContent("Scroll amount"));
             EditorGUILayout.PropertyField(historySize, new GUIContent("History size"));
 
