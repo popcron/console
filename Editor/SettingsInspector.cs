@@ -6,13 +6,13 @@ namespace Popcron.Console
     [CustomEditor(typeof(Settings))]
     public class SettingsInspector : Editor
     {
-        private bool ShowAllowanceFilter
+        private static bool ShowAllowanceFilter
         {
             get => EditorPrefs.GetBool("Popcron.Console.ShowAllowanceFilter");
             set => EditorPrefs.SetBool("Popcron.Console.ShowAllowanceFilter", value);
         }
 
-        public override void OnInspectorGUI()
+        public static void Show(SerializedObject serializedObject)
         {
             SerializedProperty userColor = serializedObject.FindProperty("userColor");
             SerializedProperty logColor = serializedObject.FindProperty("logColor");
@@ -79,6 +79,11 @@ namespace Popcron.Console
             }
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        public override void OnInspectorGUI()
+        {
+            Show(serializedObject);
         }
     }
 }
