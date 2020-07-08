@@ -19,37 +19,13 @@ namespace Popcron.Console
         private List<string> names = new List<string>();
         private List<object> parameters = new List<object>();
 
-        public string Name
-        {
-            get
-            {
-                return attribute.name;
-            }
-        }
+        public string Name => attribute.name;
 
-        public List<string> Names
-        {
-            get
-            {
-                return names;
-            }
-        }
+        public List<string> Names => names;
 
-        public Type Owner
-        {
-            get
-            {
-                return owner;
-            }
-        }
+        public Type Owner => owner;
 
-        public string Description
-        {
-            get
-            {
-                return attribute.description;
-            }
-        }
+        public string Description => attribute.description;
 
         public List<string> Parameters
         {
@@ -67,6 +43,7 @@ namespace Popcron.Console
                         names.Add(param.Name);
                     }
                 }
+
                 return names;
             }
         }
@@ -75,12 +52,24 @@ namespace Popcron.Console
         {
             get
             {
-                if (method != null) return method.IsStatic;
-                if (field != null) return field.IsStatic;
-                if (property != null)
+                if (method != null)
                 {
-                    if (get != null) return get.IsStatic;
-                    if (set != null) return get.IsStatic;
+                    return method.IsStatic;
+                }
+                else if (field != null)
+                {
+                    return field.IsStatic;
+                }
+                else if (property != null)
+                {
+                    if (get != null)
+                    {
+                        return get.IsStatic;
+                    }
+                    else if (set != null)
+                    {
+                        return get.IsStatic;
+                    }
                 }
 
                 return false;
@@ -91,9 +80,18 @@ namespace Popcron.Console
         {
             get
             {
-                if (method != null) return method;
-                if (property != null) return property;
-                if (field != null) return field;
+                if (method != null)
+                {
+                    return method;
+                }
+                else if (property != null)
+                {
+                    return property;
+                }
+                else if (field != null)
+                {
+                    return field;
+                }
 
                 return null;
             }
@@ -135,10 +133,10 @@ namespace Popcron.Console
             {
                 //set parameters
                 parameters.Clear();
-                ParameterInfo[] ps = method.GetParameters();
-                for (int i = 0; i < ps.Length; i++)
+                ParameterInfo[] methodParameters = method.GetParameters();
+                for (int i = 0; i < methodParameters.Length; i++)
                 {
-                    parameters.Add(ps[i]);
+                    parameters.Add(methodParameters[i]);
                 }
             }
             else if (property != null)
@@ -161,6 +159,25 @@ namespace Popcron.Console
             {
                 parameters.Add(field);
             }
+        }
+
+        /// <summary>
+        /// Returns the parameter info from this command with this name.
+        /// </summary>
+        public ParameterInfo GetParameter(string parameterName)
+        {
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                if (parameters[i] is ParameterInfo parameter)
+                {
+                    if (parameter.Name == parameterName)
+                    {
+                        return parameter;
+                    }
+                }
+            }
+
+            return null;
         }
 
         public object Invoke(object owner, params object[] parameters)
@@ -207,7 +224,10 @@ namespace Popcron.Console
         {
             CommandAttribute attribute = method.GetCommand();
 
-            if (attribute == null) return null;
+            if (attribute == null)
+            {
+                return null;
+            }
 
             Command command = new Command(method, attribute, type);
             return command;
@@ -217,7 +237,10 @@ namespace Popcron.Console
         {
             CommandAttribute attribute = property.GetCommand();
 
-            if (attribute == null) return null;
+            if (attribute == null)
+            {
+                return null;
+            }
 
             Command command = new Command(property, attribute, type);
             return command;
@@ -227,7 +250,10 @@ namespace Popcron.Console
         {
             CommandAttribute attribute = field.GetCommand();
 
-            if (attribute == null) return null;
+            if (attribute == null)
+            {
+                return null;
+            }
 
             Command command = new Command(field, attribute, type);
             return command;

@@ -20,11 +20,16 @@ namespace Popcron.Console
         /// A fake right angle bracket that looks like > but isnt one
         /// </summary>
         public const char RightAngleBracket = '˃';
-        
+
+        /// <summary>
+        /// Prefix to use when specifying instance commands with an ID.
+        /// </summary>
+        public const string IDPrefix = "@";
+
         /// <summary>
         /// A string that contains all valid characters.
         /// </summary>
-        public const string ValidChars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'/!@#$%^&*()_+-=[]{};':\",.˂˃/";
+        public const string ValidChars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'/!@#$%^&*()_+-=[]{};':\",.˂˃/?";
 
         private static StringBuilder stringBuilder = new StringBuilder();
         private static Dictionary<string, Owner> idToOwner = new Dictionary<string, Owner>();
@@ -70,13 +75,6 @@ namespace Popcron.Console
             ownerValue.FindFields();
         }
 
-        public static void Initialize()
-        {
-            Library.FindCategories();
-            Library.FindCommands();
-            Converter.FindConverters();
-        }
-
         /// <summary>
         /// Unregisters this object so that it's no longer something that can be identified with @.
         /// </summary>
@@ -111,6 +109,26 @@ namespace Popcron.Console
             {
                 idToOwner.Remove(id);
             }
+        }
+
+        /// <summary>
+        /// Removes any tags inside angle brackets.
+        /// </summary>
+        public static string RemoveRichText(string input)
+        {
+            if (string.IsNullOrEmpty(input) || input.Length == 0)
+            {
+                return input;
+            }
+
+            Regex regex = new Regex(@"(<!--(\s|\S)*?-->)|(<\/?(\s|\S)*?>)");
+            MatchCollection matches = regex.Matches(input);
+            foreach (Match match in matches)
+            {
+                input = input.Replace(match.Value, "");
+            }
+
+            return input;
         }
 
         /// <summary>
@@ -155,10 +173,10 @@ namespace Popcron.Console
             //if input starts with id flag
             //remove the id flag and store it separately
             string id = null;
-            if (input.StartsWith("@"))
+            if (input.StartsWith(IDPrefix))
             {
                 id = input.Substring(1, input.IndexOf(' ') - 1);
-                input = input.Replace("@" + id + " ", "");
+                input = input.Replace(IDPrefix + id + " ", "");
             }
 
             for (int c = 0; c < Library.Commands.Count; c++)
@@ -214,7 +232,14 @@ namespace Popcron.Console
                 }
             }
 
-            return "Command not found";
+            if (Settings.Current.reportUnknownCommand)
+            {
+                return "Command not found";
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>

@@ -8,6 +8,7 @@ namespace Popcron.Console
     [Serializable]
     public sealed class Library
     {
+        private static List<(Assembly assembly, Type[] types)> assemblies = null;
         private static List<Command> commands = null;
         private static List<Category> categories = null;
 
@@ -37,18 +38,38 @@ namespace Popcron.Console
             }
         }
 
+        private static List<(Assembly assembly, Type[] types)> Assemblies
+        {
+            get
+            {
+                if (assemblies == null)
+                {
+                    Assembly[] allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+                    assemblies = new List<(Assembly assembly, Type[] types)>();
+                    for (int a = 0; a < allAssemblies.Length; a++)
+                    {
+                        Assembly assembly = allAssemblies[a];
+                        Type[] types = assembly.GetTypes();
+                        assemblies.Add((assembly, types));
+                    }
+                }
+
+                return assemblies;
+            }
+        }
+
         public static void FindCategories()
         {
             if (categories == null)
             {
                 categories = new List<Category>();
                 HashSet<Type> typesWithoutCategories = new HashSet<Type>();
-                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in assemblies)
+                for (int a = 0; a < Assemblies.Count; a++)
                 {
-                    Type[] types = assembly.GetTypes();
-                    foreach (Type type in types)
+                    Type[] types = Assemblies[a].types;
+                    for (int t = 0; t < types.Length; t++)
                     {
+                        Type type = types[t];
                         Category category = Category.Create(type);
                         if (category != null)
                         {
@@ -116,15 +137,16 @@ namespace Popcron.Console
             if (commands == null)
             {
                 commands = new List<Command>();
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in assemblies)
+                for (int a = 0; a < Assemblies.Count; a++)
                 {
-                    var types = assembly.GetTypes();
-                    foreach (var type in types)
+                    Type[] types = Assemblies[a].types;
+                    for (int t = 0; t < types.Length; t++)
                     {
-                        var methods = type.GetMethods();
-                        foreach (var method in methods)
+                        Type type = types[t];
+                        MethodInfo[] methods = type.GetMethods();
+                        for (int m = 0; m < methods.Length; m++)
                         {
+                            MethodInfo method = methods[m];
                             Command command = Command.Create(method, type);
                             if (command != null)
                             {
@@ -132,9 +154,10 @@ namespace Popcron.Console
                             }
                         }
 
-                        var properties = type.GetProperties();
-                        foreach (var property in properties)
+                        PropertyInfo[] properties = type.GetProperties();
+                        for (int p = 0; p < properties.Length; p++)
                         {
+                            PropertyInfo property = properties[p];
                             Command command = Command.Create(property, type);
                             if (command != null)
                             {
@@ -142,9 +165,10 @@ namespace Popcron.Console
                             }
                         }
 
-                        var fields = type.GetFields();
-                        foreach (var field in fields)
+                        FieldInfo[] fields = type.GetFields();
+                        for (int f = 0; f < fields.Length; f++)
                         {
+                            FieldInfo field = fields[f];
                             Command command = Command.Create(field, type);
                             if (command != null)
                             {
