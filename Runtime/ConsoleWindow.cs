@@ -306,7 +306,7 @@ namespace Popcron.Console
 
             string color = Settings.Current.GetColor(type);
             Instance.Add(stringText, color);
-            LogToFile(stringText, type.ToString());
+            LogToFile(Parser.RemoveRichText(stringText), type.ToString());
 
             //invoke the printed event
             onPrinted?.Invoke(stringText, type);
@@ -377,79 +377,6 @@ namespace Popcron.Console
             }
         }
 
-        private string RemoveRichText(string input)
-        {
-            //remove bold start tag
-            int index = input.IndexOf("<b>");
-            if (index != -1)
-            {
-                input = input.Replace("<b>", "");
-            }
-
-            //remove bold end tag
-            index = input.IndexOf("</b>");
-            if (index != -1)
-            {
-                input = input.Replace("</b>", "");
-            }
-
-            //remove italics start tag
-            index = input.IndexOf("<i>");
-            if (index != -1)
-            {
-                input = input.Replace("<i>", "");
-            }
-
-            //remove italics end tag
-            index = input.IndexOf("</i>");
-            if (index != -1)
-            {
-                input = input.Replace("</i>", "");
-            }
-
-            //remove all color end tags
-            index = input.IndexOf("</color>");
-            if (index != -1)
-            {
-                input = input.Replace("</color>", "");
-            }
-
-            while (true) //safe
-            {
-                //remove all color start tags
-                index = input.IndexOf("<color=");
-                if (index != -1)
-                {
-                    int end = -1;
-                    for (int i = index; i < input.Length; i++)
-                    {
-                        if (input[i] == '>')
-                        {
-                            end = i;
-                            break;
-                        }
-                    }
-
-                    if (end != -1)
-                    {
-                        input = input.Remove(index, end - index);
-                    }
-                    else
-                    {
-                        //somehow there is no end to this color tag? so kys
-                        break;
-                    }
-                }
-                else
-                {
-                    //no more color start tags, so we can break
-                    break;
-                }
-            }
-
-            return input;
-        }
-
         private void Add(string input, string color)
         {
             List<string> lines = new List<string>();
@@ -469,7 +396,7 @@ namespace Popcron.Console
                 string line = $"<color={color}>{lines[i]}</color>";
                 rawText.Add(line);
 
-                string newLine = RemoveRichText(lines[i]);
+                string newLine = Parser.RemoveRichText(lines[i]);
                 text.Add(newLine);
 
                 //too many entries!
@@ -625,9 +552,10 @@ namespace Popcron.Console
                         {
                             foreach (string parameter in command.Parameters)
                             {
-                                textBuilder.Append(" <");
+                                textBuilder.Append(" ");
+                                textBuilder.Append(Parser.LeftAngleBracket);
                                 textBuilder.Append(parameter);
-                                textBuilder.Append(">");
+                                textBuilder.Append(Parser.RightAngleBracket);
                             }
                         }
                         else if (command.Member is PropertyInfo property)

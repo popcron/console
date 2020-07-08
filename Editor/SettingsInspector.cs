@@ -24,8 +24,8 @@ namespace Popcron.Console
             SerializedProperty scrollAmount = serializedObject.FindProperty("scrollAmount");
             SerializedProperty historySize = serializedObject.FindProperty("historySize");
             SerializedProperty logToFile = serializedObject.FindProperty("logToFile");
+            SerializedProperty reportUnknownCommand = serializedObject.FindProperty("reportUnknownCommand");
             SerializedProperty checkForOpenInput = serializedObject.FindProperty("checkForOpenInput");
-            SerializedProperty consoleChararacters = serializedObject.FindProperty("consoleChararacters");
             SerializedProperty blacklistedScenes = serializedObject.FindProperty("blacklistedScenes");
 
             //show the colours first
@@ -59,12 +59,20 @@ namespace Popcron.Console
                 EditorGUI.indentLevel--;
             }
 
-            EditorGUILayout.PropertyField(checkForOpenInput, new GUIContent("Built-in open check"));
+            EditorGUILayout.PropertyField(reportUnknownCommand, new GUIContent("Report unknown command"));
             EditorGUILayout.PropertyField(scrollAmount, new GUIContent("Scroll amount"));
             EditorGUILayout.PropertyField(historySize, new GUIContent("History size"));
 
             //show the keys that gon be used
-            EditorGUILayout.PropertyField(consoleChararacters, new GUIContent("Console open keys"));
+            EditorGUILayout.PropertyField(checkForOpenInput, new GUIContent("Built-in open check"));
+            if (checkForOpenInput.boolValue)
+            {
+                SerializedProperty consoleChararacters = serializedObject.FindProperty("consoleChararacters");
+
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(consoleChararacters, new GUIContent("Console open keys"));
+                EditorGUI.indentLevel--;
+            }
 
             EditorGUILayout.PropertyField(logToFile, new GUIContent("Log to file"));
             if (logToFile.boolValue)

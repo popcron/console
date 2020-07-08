@@ -91,6 +91,7 @@ MonoBehaviour:
   historySize: 1024
   logToFile: 1
   checkForOpenInput: 1
+  reportUnknownCommand: 0
   consoleChararacters: "`!~*^#\\\u0401\xA7"
   allowWarnings: 0
   allowLogs: 1

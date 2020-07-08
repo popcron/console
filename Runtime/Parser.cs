@@ -112,6 +112,26 @@ namespace Popcron.Console
         }
 
         /// <summary>
+        /// Removes any tags inside angle brackets.
+        /// </summary>
+        public static string RemoveRichText(string input)
+        {
+            if (string.IsNullOrEmpty(input) || input.Length == 0)
+            {
+                return input;
+            }
+
+            Regex regex = new Regex(@"(<!--(\s|\S)*?-->)|(<\/?(\s|\S)*?>)");
+            MatchCollection matches = regex.Matches(input);
+            foreach (Match match in matches)
+            {
+                input = input.Replace(match.Value, "");
+            }
+
+            return input;
+        }
+
+        /// <summary>
         /// Sanitizes the input string so that its ok and good and nice.
         /// </summary>
         public static string Sanitize(string input)
@@ -212,7 +232,14 @@ namespace Popcron.Console
                 }
             }
 
-            return "Command not found";
+            if (Settings.Current.reportUnknownCommand)
+            {
+                return "Command not found";
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>

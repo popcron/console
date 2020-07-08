@@ -114,6 +114,7 @@ namespace Popcron.Console
         public int historySize = 1024;
         public bool logToFile = true;
         public bool checkForOpenInput = true;
+        public bool reportUnknownCommand = true;
 
         [SerializeField]
         private string consoleChararacters = "`!~*^#\\Ё§";
