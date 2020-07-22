@@ -1,5 +1,4 @@
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Popcron.Console
@@ -20,12 +19,7 @@ namespace Popcron.Console
 
         public override void OnGUI(string searchContext)
         {
-            float x = 7;
-            float y = 10;
-            Rect rect = new Rect(x, y, Screen.width - x, Screen.height - y);
-            GUILayout.BeginArea(rect);
             SettingsInspector.Show(settings);
-            GUILayout.EndArea();
         }
 
         [SettingsProvider]
