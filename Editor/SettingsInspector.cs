@@ -28,9 +28,6 @@ namespace Popcron.Console
             SerializedProperty reportUnknownCommand = serializedObject.FindProperty("reportUnknownCommand");
             SerializedProperty checkForOpenInput = serializedObject.FindProperty("checkForOpenInput");
             SerializedProperty blacklistedScenes = serializedObject.FindProperty("blacklistedScenes");
-            SerializedProperty defineSymbolsMode = serializedObject.FindProperty("defineSymbolsMode");
-            SerializedProperty defineSymbols = serializedObject.FindProperty("defineSymbols");
-            SerializedProperty defineSymbolsInvert = serializedObject.FindProperty("defineSymbolsInvert");
 
             //show the colours first
             EditorGUILayout.PropertyField(userColor, new GUIContent("User input"));
@@ -61,49 +58,6 @@ namespace Popcron.Console
                 EditorGUILayout.PropertyField(allowLogs, new GUIContent("Logs"));
                 EditorGUILayout.PropertyField(allowWarnings, new GUIContent("Warnings"));
                 EditorGUI.indentLevel--;
-            }
-
-            //show the define symbols settings
-            EditorGUILayout.PropertyField(defineSymbolsMode, new GUIContent("Define Symbols Mode"));
-            EditorGUILayout.PropertyField(defineSymbolsInvert, new GUIContent("Invert"));
-            bool invert = defineSymbolsInvert.boolValue;
-            if (settings.defineSymbolsMode != Settings.DefineSymbolsMode.AlwaysInclude)
-            {
-                if (settings.defineSymbolsMode == Settings.DefineSymbolsMode.EnableIfContains)
-                {
-                    if (!invert)
-                    {
-                        EditorGUILayout.HelpBox("Console will be included if any of the following conditionals are defined.", MessageType.Info);
-                    }
-                    else
-                    {
-                        EditorGUILayout.HelpBox("Console wont be included if any of the following conditionals are defined.", MessageType.Info);
-                    }
-                }
-                else if (settings.defineSymbolsMode == Settings.DefineSymbolsMode.EnableIfAllExist)
-                {
-                    if (!invert)
-                    {
-                        EditorGUILayout.HelpBox("Console will be included if all of the following conditionals are defined.", MessageType.Info);
-                    }
-                    else
-                    {
-                        EditorGUILayout.HelpBox("Console wont be included if all of the following conditionals are defined.", MessageType.Info);
-                    }
-                }
-
-                EditorGUILayout.PropertyField(defineSymbols, new GUIContent("Define Symbols"), true);
-            }
-            else
-            {
-                if (!invert)
-                {
-                    EditorGUILayout.HelpBox("Console will always be included in builds regardless of the define symbols present.", MessageType.Info);
-                }
-                else
-                {
-                    EditorGUILayout.HelpBox("Console will never be included in builds.", MessageType.Info);
-                }
             }
 
             EditorGUILayout.PropertyField(reportUnknownCommand, new GUIContent("Report unknown command"));

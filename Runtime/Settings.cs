@@ -117,9 +117,6 @@ namespace Popcron.Console
 
         public List<string> startupCommands = new List<string>() { "info" };
         public GUIStyle consoleStyle = new GUIStyle();
-        public DefineSymbolsMode defineSymbolsMode = DefineSymbolsMode.AlwaysInclude;
-        public List<string> defineSymbols = new List<string>();
-        public bool defineSymbolsInvert = false;
         public int scrollAmount = 3;
         public int historySize = 1024;
         public bool logToFile = true;

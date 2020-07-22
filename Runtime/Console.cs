@@ -1,4 +1,6 @@
-﻿using Popcron.Console;
+﻿#pragma warning disable CS0162 // Unreachable code detected
+
+using Popcron.Console;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,6 +10,15 @@ using C = Popcron.Console.ConsoleWindow;
 
 public struct Console
 {
+    /// <summary>
+    /// Returns true if the console is meant to be functional.
+    /// </summary>
+#if DISABLE_CONSOLE && !UNITY_EDITOR
+    public const bool IsIncluded = false;
+#else
+    public const bool IsIncluded = true;
+#endif
+
     /// <summary>
     /// Gets executed after a message is added to the console window.
     /// </summary>
@@ -90,6 +101,11 @@ public struct Console
     /// </summary>
     public static async Task<object> RunAsyncTask(string command)
     {
+        if (!IsIncluded)
+        {
+            return null;
+        }
+
         //run
         char newLine = '\n';
         object result = await Parser.Run(command);
@@ -121,6 +137,11 @@ public struct Console
     /// </summary>
     public static void Run(List<string> commands)
     {
+        if (!IsIncluded)
+        {
+            return;
+        }
+
         if (commands == null || commands.Count == 0)
         {
             return;
@@ -137,6 +158,11 @@ public struct Console
     /// </summary>
     public static async void RunAsync(List<string> commands)
     {
+        if (!IsIncluded)
+        {
+            return;
+        }
+
         if (commands == null || commands.Count == 0)
         {
             return;
@@ -153,6 +179,11 @@ public struct Console
     /// </summary>
     public static async Task RunAsyncTask(List<string> commands)
     {
+        if (!IsIncluded)
+        {
+            return;
+        }
+
         if (commands == null || commands.Count == 0)
         {
             return;

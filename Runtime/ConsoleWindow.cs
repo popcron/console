@@ -1,3 +1,5 @@
+#pragma warning disable CS0162 // Unreachable code detected
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -5,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using C = Console;
 
 namespace Popcron.Console
 {
@@ -13,14 +16,15 @@ namespace Popcron.Console
     {
         private static ConsoleWindow instance;
         private const string ConsoleControlName = "ControlField";
+        private static ReadOnlyCollection<string> emptyHistory;
+        private static ReadOnlyCollection<string> emptyText;
+        private static StringBuilder suggestionsText = new StringBuilder();
 
         public delegate bool OnAboutToPrint(object obj, string text, LogType type);
         public delegate void OnPrinted(string text, LogType type);
 
         public static OnAboutToPrint onAboutToPrint;
         public static OnPrinted onPrinted;
-
-        private static StringBuilder suggestionsText = new StringBuilder();
 
         private static int MaxLines
         {
@@ -52,8 +56,24 @@ namespace Popcron.Console
         /// </summary>
         public static string TextInput
         {
-            get => Instance.textInput;
-            set => Instance.textInput = Parser.Sanitize(value);
+            get
+            {
+                if (!C.IsIncluded)
+                {
+                    return null;
+                }
+
+                return Instance.textInput;
+            }
+            set
+            {
+                if (!C.IsIncluded)
+                {
+                    return;
+                }
+
+                Instance.textInput = Parser.Sanitize(value);
+            }
         }
 
         /// <summary>
@@ -61,9 +81,22 @@ namespace Popcron.Console
         /// </summary>
         public static bool IsOpen
         {
-            get => Instance.isOpen;
+            get
+            {
+                if (!C.IsIncluded)
+                {
+                    return false;
+                }
+
+                return Instance.isOpen;
+            }
             set
             {
+                if (!C.IsIncluded)
+                {
+                    return;
+                }
+
                 Instance.textInput = null;
                 Instance.isOpen = value;
                 if (value)
@@ -78,8 +111,8 @@ namespace Popcron.Console
         [Obsolete("This is obsolete, use Console.IsOpen instead.")]
         public static bool Open
         {
-            get => Instance.isOpen;
-            set => Instance.isOpen = value;
+            get => IsOpen;
+            set => IsOpen = value;
         }
 
         /// <summary>
@@ -87,9 +120,22 @@ namespace Popcron.Console
         /// </summary>
         public static int ScrollPosition
         {
-            get => Instance.scrollPosition;
+            get
+            {
+                if (!C.IsIncluded)
+                {
+                    return 0;
+                }
+
+                return Instance.scrollPosition;
+            }
             set
             {
+                if (!C.IsIncluded)
+                {
+                    return;
+                }
+
                 if (value < 0)
                 {
                     value = 0;
@@ -112,6 +158,16 @@ namespace Popcron.Console
         {
             get
             {
+                if (!C.IsIncluded)
+                {
+                    if (emptyHistory == null)
+                    {
+                        emptyHistory = new List<string>().AsReadOnly();
+                    }
+
+                    return emptyHistory;
+                }
+
                 //recreate if different
                 if (Instance.historyReadOnly == null || Instance.historyReadOnly.Count != Instance.history.Count)
                 {
@@ -129,6 +185,16 @@ namespace Popcron.Console
         {
             get
             {
+                if (!C.IsIncluded)
+                {
+                    if (emptyText == null)
+                    {
+                        emptyText = new List<string>().AsReadOnly();
+                    }
+
+                    return emptyText;
+                }
+
                 //recreate if different
                 if (Instance.textReadOnly == null || Instance.textReadOnly.Count != Instance.text.Count)
                 {
@@ -182,7 +248,7 @@ namespace Popcron.Console
             for (int i = 0; i < Settings.Current.startupCommands.Count; i++)
             {
                 string command = Settings.Current.startupCommands[i];
-                global::Console.Run(command);
+                C.Run(command);
             }
         }
 
@@ -203,6 +269,11 @@ namespace Popcron.Console
 
         private void HandleLog(string message, string stack, LogType logType)
         {
+            if (!C.IsIncluded)
+            {
+                return;
+            }
+
             //pass this log type through the filter first
             if (!Settings.Current.IsAllowed(logType))
             {
@@ -278,6 +349,11 @@ namespace Popcron.Console
         /// </summary>
         public static void Clear()
         {
+            if (!C.IsIncluded)
+            {
+                return;
+            }
+
             ScrollPosition = 0;
             TextInput = "";
 
@@ -292,6 +368,11 @@ namespace Popcron.Console
         /// </summary>
         public static void WriteLine(object obj, LogType type = LogType.Log)
         {
+            if (!C.IsIncluded)
+            {
+                return;
+            }
+
             string stringText = GetStringFromObject(obj);
             if (stringText == null)
             {
@@ -926,7 +1007,7 @@ namespace Popcron.Console
                 index = history.Count;
 
                 Search(null);
-                global::Console.Run(textInput);
+                C.Run(textInput);
                 Event.current.Use();
 
                 textInput = "";
@@ -939,6 +1020,11 @@ namespace Popcron.Console
         /// </summary>
         public static ConsoleWindow GetOrCreate()
         {
+            if (!C.IsIncluded)
+            {
+                return null;
+            }
+
             //is this scene blacklisted?
             if (Settings.Current.IsSceneBlacklisted())
             {
