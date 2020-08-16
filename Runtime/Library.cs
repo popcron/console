@@ -5,7 +5,6 @@ using System.Reflection;
 
 namespace Popcron.Console
 {
-    [Serializable]
     public sealed class Library
     {
         private static List<(Assembly assembly, Type[] types)> assemblies = null;
@@ -44,13 +43,49 @@ namespace Popcron.Console
             {
                 if (assemblies == null)
                 {
-                    Assembly[] allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-                    assemblies = new List<(Assembly assembly, Type[] types)>();
-                    for (int a = 0; a < allAssemblies.Length; a++)
+                    List<string> allAssemblies = Settings.Current.assemblies.ToList();
+                    Assembly executingAssembly = Assembly.GetExecutingAssembly();
+                    Assembly callingAssembly = Assembly.GetCallingAssembly();
+                    Assembly entryAssembly = Assembly.GetEntryAssembly();
+                    Assembly consoleAssembly = typeof(ConsoleWindow).Assembly;
+
+                    //ensure the last 4 assemblies exist in the list
+                    if (executingAssembly != null && !allAssemblies.Contains(executingAssembly.FullName))
                     {
-                        Assembly assembly = allAssemblies[a];
-                        Type[] types = assembly.GetTypes();
-                        assemblies.Add((assembly, types));
+                        allAssemblies.Add(executingAssembly.FullName);
+                    }
+
+                    if (callingAssembly != null && !allAssemblies.Contains(callingAssembly.FullName))
+                    {
+                        allAssemblies.Add(callingAssembly.FullName);
+                    }
+
+                    if (entryAssembly != null && !allAssemblies.Contains(entryAssembly.FullName))
+                    {
+                        allAssemblies.Add(entryAssembly.FullName);
+                    }
+
+                    if (consoleAssembly != null && !allAssemblies.Contains(consoleAssembly.FullName))
+                    {
+                        allAssemblies.Add(consoleAssembly.FullName);
+                    }
+
+                    assemblies = new List<(Assembly assembly, Type[] types)>();
+                    for (int a = 0; a < allAssemblies.Count; a++)
+                    {
+                        try
+                        {
+                            Assembly assembly = Assembly.Load(allAssemblies[a]);
+                            if (assembly != null)
+                            {
+                                Type[] types = assembly.GetTypes();
+                                assemblies.Add((assembly, types));
+                            }
+                        }
+                        catch
+                        {
+
+                        }
                     }
                 }
 

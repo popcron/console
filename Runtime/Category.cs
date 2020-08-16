@@ -9,21 +9,8 @@ namespace Popcron.Console
         private string name = "";
         private List<Command> commands = new List<Command>();
 
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-        }
-
-        public List<Command> Commands
-        {
-            get
-            {
-                return commands;
-            }
-        }
+        public string Name => name;
+        public List<Command> Commands => commands;
 
         private Category(string name)
         {
@@ -39,7 +26,10 @@ namespace Popcron.Console
         public static Category Create(Type type)
         {
             CategoryAttribute attribute = type.GetCategoryAttribute();
-            if (attribute == null) return null;
+            if (attribute == null)
+            {
+                return null;
+            }
 
             Category category = new Category(attribute.name);
             List<Command> commands = Library.Commands;

@@ -9,8 +9,9 @@ namespace Popcron.Console
 {
     public class Parser
     {
-        //&lt; is escaped version of the < char
+        private static readonly Regex richTextRegex = new Regex(@"(<!--(\s|\S)*?-->)|(<\/?(\s|\S)*?>)");
 
+        //&lt; is escaped version of the < char
         /// <summary>
         /// A fake left angle bracket that looks like &lt; but isnt one
         /// </summary>
@@ -121,8 +122,12 @@ namespace Popcron.Console
                 return input;
             }
 
-            Regex regex = new Regex(@"(<!--(\s|\S)*?-->)|(<\/?(\s|\S)*?>)");
-            MatchCollection matches = regex.Matches(input);
+            if (input.IndexOf('<') == -1 && input.IndexOf('>') == -1)
+            {
+                return input;
+            }
+
+            MatchCollection matches = richTextRegex.Matches(input);
             foreach (Match match in matches)
             {
                 input = input.Replace(match.Value, "");

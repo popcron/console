@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System;
+using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace Popcron.Console
@@ -27,7 +29,6 @@ namespace Popcron.Console
             SerializedProperty logToFile = serializedObject.FindProperty("logToFile");
             SerializedProperty reportUnknownCommand = serializedObject.FindProperty("reportUnknownCommand");
             SerializedProperty checkForOpenInput = serializedObject.FindProperty("checkForOpenInput");
-            SerializedProperty blacklistedScenes = serializedObject.FindProperty("blacklistedScenes");
 
             //show the colours first
             EditorGUILayout.PropertyField(userColor, new GUIContent("User input"));
@@ -39,7 +40,9 @@ namespace Popcron.Console
             //show the other garbage
             EditorGUILayout.PropertyField(consoleStyle, new GUIContent("Style"));
             EditorGUILayout.PropertyField(startupCommands, new GUIContent("Commands at startup"), true);
-            EditorGUILayout.PropertyField(blacklistedScenes, new GUIContent("Blacklisted scenes"), true);
+
+            ShowBlacklistedScenes(settings, serializedObject);
+            ShowAssemblies(settings, serializedObject);
 
             //allowance filter
             ShowAllowanceFilter = EditorGUILayout.Foldout(ShowAllowanceFilter, "Filter");
@@ -90,9 +93,60 @@ namespace Popcron.Console
             serializedObject.ApplyModifiedProperties();
         }
 
+        private static void ShowBlacklistedScenes(Settings settings, SerializedObject serializedObject)
+        {
+            SerializedProperty blacklistedScenes = serializedObject.FindProperty("blacklistedScenes");
+            EditorGUILayout.PropertyField(blacklistedScenes, new GUIContent("Blacklisted scenes"), true);
+
+            SerializedProperty blacklistedSceneNames = serializedObject.FindProperty("blacklistedSceneNames");
+            blacklistedSceneNames.arraySize = settings.blacklistedScenes.Count;
+            for (int i = 0; i < settings.blacklistedScenes.Count; i++)
+            {
+                SerializedProperty arrayElement = blacklistedSceneNames.GetArrayElementAtIndex(i);
+                SceneAsset sceneAsset = settings.blacklistedScenes[i];
+                if (sceneAsset != null)
+                {
+                    arrayElement.stringValue = sceneAsset.name;
+                }
+                else
+                {
+                    arrayElement.stringValue = "";
+                }
+            }
+        }
+
+        private static void ShowAssemblies(Settings settings, SerializedObject serializedObject)
+        {
+            SerializedProperty assemblyDefinitions = serializedObject.FindProperty("assemblyDefinitions");
+            EditorGUILayout.PropertyField(assemblyDefinitions, new GUIContent("Assemblies"), true);
+
+            SerializedProperty assemblies = serializedObject.FindProperty("assemblies");
+            assemblies.arraySize = settings.assemblyDefinitions.Count;
+            for (int i = 0; i < settings.assemblyDefinitions.Count; i++)
+            {
+                SerializedProperty arrayElement = assemblies.GetArrayElementAtIndex(i);
+                AssemblyDefinitionAsset assemblyDefinitionAsset = settings.assemblyDefinitions[i];
+                try
+                {
+                    AssemblyDefinition definition = JsonUtility.FromJson<AssemblyDefinition>(assemblyDefinitionAsset.text);
+                    arrayElement.stringValue = definition.name;
+                }
+                catch
+                {
+                    arrayElement.stringValue = "";
+                }
+            }
+        }
+
         public override void OnInspectorGUI()
         {
             Show(serializedObject);
+        }
+
+        [Serializable]
+        internal class AssemblyDefinition
+        {
+            public string name;
         }
     }
 }

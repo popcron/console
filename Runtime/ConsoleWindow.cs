@@ -449,7 +449,7 @@ namespace Popcron.Console
                     if (!string.IsNullOrEmpty(logType))
                     {
                         stream.Write(' ');
-                        stream.Write(logType.ToString());
+                        stream.Write(logType);
                     }
 
                     stream.Write("] ");

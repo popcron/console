@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditorInternal;
+#endif
 
 namespace Popcron.Console
 {
@@ -76,24 +80,26 @@ namespace Popcron.Console
         {
             get
             {
-                string path = logFilePathPlayer;
+                if (string.IsNullOrEmpty(cachedLogFilePath))
+                {
+                    cachedLogFilePath = logFilePathPlayer;
 #if UNITY_EDITOR
-                path = logFilePathEditor;
+                    cachedLogFilePath = logFilePathEditor;
 #endif
 
-                string root = Directory.GetParent(Application.dataPath).FullName;
-                if (path == "./")
-                {
-                    //if its just the 2 chars, then its not valid!
-                    return path;
-                }
-                else if (path.StartsWith("./"))
-                {
-                    //replace those 2 chars with the root
-                    path = path.Replace("./", $"{root}/");
+                    string root = Directory.GetParent(Application.dataPath).FullName;
+                    if (cachedLogFilePath == "./")
+                    {
+                        //if its just the 2 chars, then its not valid!
+                    }
+                    else if (cachedLogFilePath.StartsWith("./"))
+                    {
+                        //replace those 2 chars with the root
+                        cachedLogFilePath = cachedLogFilePath.Replace("./", $"{root}/");
+                    }
                 }
 
-                return path;
+                return cachedLogFilePath;
             }
         }
 
@@ -112,9 +118,13 @@ namespace Popcron.Console
         [SerializeField]
         private Color logColor = Color.white;
 
-        [SerializeField]
-        private List<string> blacklistedScenes = new List<string>();
+#if UNITY_EDITOR
+        public List<AssemblyDefinitionAsset> assemblyDefinitions = new List<AssemblyDefinitionAsset>();
+        public List<SceneAsset> blacklistedScenes = new List<SceneAsset>();
+#endif
 
+        public List<string> assemblies = new List<string>();
+        public List<string> blacklistedSceneNames = new List<string>();
         public List<string> startupCommands = new List<string>() { "info" };
         public GUIStyle consoleStyle = new GUIStyle();
         public int scrollAmount = 3;
@@ -174,16 +184,19 @@ namespace Popcron.Console
         [NonSerialized]
         private string exceptionColorHex;
 
+        [NonSerialized]
+        private string cachedLogFilePath;
+
         /// <summary>
         /// Is the current scene blacklisted and disallowed.
         /// </summary>
-        /// <returns></returns>
         public bool IsSceneBlacklisted()
         {
             Scene scene = SceneManager.GetActiveScene();
-            for (int i = 0; i < blacklistedScenes.Count; i++)
+            string sceneName = scene.name;
+            for (int i = 0; i < blacklistedSceneNames.Count; i++)
             {
-                if (blacklistedScenes[i].Equals(scene.path))
+                if (blacklistedSceneNames[i].Equals(sceneName))
                 {
                     return true;
                 }
@@ -306,9 +319,9 @@ namespace Popcron.Console
             if (!exists)
             {
                 //ensure the resources folder exists
-                if (!Directory.Exists("Assets/Resources"))
+                if (!AssetDatabase.IsValidFolder("Assets/Resources"))
                 {
-                    Directory.CreateDirectory("Assets/Resources");
+                    AssetDatabase.CreateFolder("Assets", "Resources");
                 }
 
                 //make a file here
