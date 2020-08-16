@@ -167,3 +167,5 @@ No you can use instance members too, as long as you register and unregister the 
 Add a `Category` attribute to the class type.
 - **How do I make my own converter?**
 Create a new class, and inherit from the `Converter` class.
+- **It's not detecting commands in my custom assembly!**
+Go to ProjectSettings/Console and add your custom assembly to the list of assemblies.
