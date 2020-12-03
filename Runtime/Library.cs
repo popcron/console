@@ -167,6 +167,31 @@ namespace Popcron.Console
             return false;
         }
 
+        public static void AddCommand(Command command, string category = null)
+        {
+            if (commands == null)
+            {
+                FindCommands();
+            }
+
+            if (!TryGetCategory(category, out Category cat))
+            {
+                cat = Categories[Categories.Count - 1];
+            }
+
+            foreach (Command existingCommand in cat.Commands)
+            {
+                if (existingCommand.GetHashCode() == command.GetHashCode())
+                {
+                    //already exists!
+                    return;
+                }
+            }
+
+            cat.Commands.Add(command);
+            commands.Add(command);
+        }
+
         public static void FindCommands()
         {
             if (commands == null)

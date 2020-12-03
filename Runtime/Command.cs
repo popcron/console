@@ -7,6 +7,11 @@ namespace Popcron.Console
     [Serializable]
     public class Command
     {
+        public delegate void OnMethodInvokedEvent();
+
+        private string name;
+        private List<string> names = new List<string>();
+        private string description;
         private MethodInfo method;
         private PropertyInfo property;
         private FieldInfo field;
@@ -14,18 +19,14 @@ namespace Popcron.Console
         private MethodInfo get;
         private MethodInfo set;
 
-        private CommandAttribute attribute;
         private Type owner;
-        private List<string> names = new List<string>();
         private List<object> parameters = new List<object>();
 
-        public string Name => attribute.name;
-
+        public string Name => name;
         public List<string> Names => names;
-
         public Type Owner => owner;
-
-        public string Description => attribute.description;
+        public string Description => description;
+        public OnMethodInvokedEvent OnMethodInvoked { get; set; }
 
         public List<string> Parameters
         {
@@ -97,29 +98,52 @@ namespace Popcron.Console
             }
         }
 
-        private Command(MethodInfo method, CommandAttribute attribute, Type owner)
+        private Command(string name, string description, MethodInfo method, Type owner)
         {
+            this.name = name;
+            this.description = description;
             this.method = method;
-            Initialize(attribute, owner);
-        }
-
-        private Command(PropertyInfo property, CommandAttribute attribute, Type owner)
-        {
-            this.property = property;
-            Initialize(attribute, owner);
-        }
-
-        private Command(FieldInfo field, CommandAttribute attribute, Type owner)
-        {
-            this.field = field;
-            Initialize(attribute, owner);
-        }
-
-        private void Initialize(CommandAttribute attribute, Type owner)
-        {
-            this.attribute = attribute;
             this.owner = owner;
+            Initialize();
+        }
 
+        private Command(string name, string description, PropertyInfo property, Type owner)
+        {
+            this.name = name;
+            this.description = description;
+            this.property = property;
+            this.owner = owner;
+            Initialize();
+        }
+
+        private Command(string name, string description, FieldInfo field, Type owner)
+        {
+            this.name = name;
+            this.description = description;
+            this.field = field;
+            this.owner = owner;
+            Initialize();
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = 1622228699;
+                hashCode = hashCode * -1521134295 + name.GetHashCode();
+
+                if (!string.IsNullOrEmpty(description))
+                {
+                    hashCode = hashCode * -1521134295 + description.GetHashCode();
+                }
+
+                hashCode = hashCode * -1521134295 + Member.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        private void Initialize()
+        {
             //find alias attributes
             AliasAttribute[] aliases = Member.GetAliases();
             foreach (AliasAttribute alias in aliases)
@@ -184,6 +208,7 @@ namespace Popcron.Console
         {
             if (method != null)
             {
+                OnMethodInvoked?.Invoke();
                 return method.Invoke(owner, parameters);
             }
             else if (property != null)
@@ -220,43 +245,55 @@ namespace Popcron.Console
             return null;
         }
 
+        public static Command Create(string name, string description, MethodInfo method, Type type)
+        {
+            Command command = new Command(name, description, method, type);
+            return command;
+        }
+
         public static Command Create(MethodInfo method, Type type)
         {
             CommandAttribute attribute = method.GetCommand();
-
             if (attribute == null)
             {
                 return null;
             }
 
-            Command command = new Command(method, attribute, type);
+            return Create(attribute.name, attribute.description, method, type);
+        }
+
+        public static Command Create(string name, string description, PropertyInfo property, Type type)
+        {
+            Command command = new Command(name, description, property, type);
             return command;
         }
 
         public static Command Create(PropertyInfo property, Type type)
         {
             CommandAttribute attribute = property.GetCommand();
-
             if (attribute == null)
             {
                 return null;
             }
 
-            Command command = new Command(property, attribute, type);
+            return Create(attribute.name, attribute.description, property, type);
+        }
+
+        public static Command Create(string name, string description, FieldInfo field, Type type)
+        {
+            Command command = new Command(name, description, field, type);
             return command;
         }
 
         public static Command Create(FieldInfo field, Type type)
         {
             CommandAttribute attribute = field.GetCommand();
-
             if (attribute == null)
             {
                 return null;
             }
 
-            Command command = new Command(field, attribute, type);
-            return command;
+            return Create(attribute.name, attribute.description, field, type);
         }
 
         public bool Matches(List<string> parametersGiven, out object[] convertedParameters)
