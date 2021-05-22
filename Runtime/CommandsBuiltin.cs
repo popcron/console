@@ -67,7 +67,7 @@ public class CommandsBuiltin
         StringBuilder text = new StringBuilder();
         foreach (Owner owner in Parser.Owners)
         {
-            Console.Print(Indent + owner.id + " = " + owner.owner);
+            text.AppendLine(Indent + owner.id + " = " + owner.owner);
             foreach (Owner.OwnerMember method in owner.methods)
             {
                 text.AppendLine(Indent + Indent + method.name);
@@ -77,8 +77,7 @@ public class CommandsBuiltin
             {
                 if (property.canSetProperty)
                 {
-                    text.Append(Indent + Indent + property.name);
-                    text.AppendLine(" [value]");
+                    text.Append(Indent + Indent + property.name + " [value]");
                 }
                 else
                 {
@@ -88,9 +87,7 @@ public class CommandsBuiltin
 
             foreach (Owner.OwnerMember field in owner.fields)
             {
-                text.AppendLine(Indent + Indent + field.name);
-                text.AppendLine(" = ");
-                text.AppendLine(field.Value?.ToString());
+                text.AppendLine(Indent + Indent + field.name + " = " + field.Value?.ToString());
             }
         }
         return text.ToString();
