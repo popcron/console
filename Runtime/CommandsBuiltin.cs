@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 public class CommandsBuiltin
 {
     private const string Indent = "    ";
+    private const string TwiceIndent = TwiceIndent;
 
     [Command("info", "Prints system information.")]
     public static string PrintSystemInfo()
@@ -70,24 +71,31 @@ public class CommandsBuiltin
             text.AppendLine(Indent + owner.id + " = " + owner.owner);
             foreach (Owner.OwnerMember method in owner.methods)
             {
-                text.AppendLine(Indent + Indent + method.name);
+				text.Append(TwiceIndent);
+                text.AppendLine(method.name);
             }
 
             foreach (Owner.OwnerMember property in owner.properties)
             {
                 if (property.canSetProperty)
                 {
-                    text.Append(Indent + Indent + property.name + " [value]");
+                    text.Append(TwiceIndent);
+					text.Append(property.name);
+					text.Append(" [value]");
                 }
                 else
                 {
-                    text.AppendLine(Indent + Indent + property.name);
+                    text.Append(TwiceIndent);
+                    text.AppendLine(property.name);
                 }
             }
 
             foreach (Owner.OwnerMember field in owner.fields)
             {
-                text.AppendLine(Indent + Indent + field.name + " = " + field.Value?.ToString());
+                text.Append(TwiceIndent);
+                text.Append(field.name);
+                text.Append(" = ");
+                text.AppendLine(field.Value?.ToString());
             }
         }
         return text.ToString();
@@ -116,7 +124,7 @@ public class CommandsBuiltin
             foreach (Command command in category.Commands)
             {
                 string namesText = string.Join("/", command.Names);
-                builder.Append(Indent + Indent);
+                builder.Append(TwiceIndent);
 
                 //not static, so an instance method with ID requirement
                 if (!command.IsStatic)
@@ -199,7 +207,7 @@ public class CommandsBuiltin
         for (int i = 0; i < childCount; i++)
         {
             Transform kid = transform.GetChild(i);
-            PrintObjectAndKids(indent + Indent, kid);
+            PrintObjectAndKids(TwiceIndent, kid);
         }
     }
 }
