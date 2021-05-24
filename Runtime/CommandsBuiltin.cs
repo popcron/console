@@ -80,8 +80,8 @@ public class CommandsBuiltin
                 if (property.canSetProperty)
                 {
                     text.Append(TwiceIndent);
-					text.Append(property.name);
-					text.Append(" [value]");
+                    text.Append(property.name);
+                    text.AppendLine(" [value]");
                 }
                 else
                 {
