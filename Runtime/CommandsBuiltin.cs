@@ -71,7 +71,7 @@ public class CommandsBuiltin
             text.AppendLine(Indent + owner.id + " = " + owner.owner);
             foreach (Owner.OwnerMember method in owner.methods)
             {
-				text.Append(TwiceIndent);
+                text.Append(TwiceIndent);
                 text.AppendLine(method.name);
             }
 
