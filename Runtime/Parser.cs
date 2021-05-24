@@ -180,8 +180,16 @@ namespace Popcron.Console
             string id = null;
             if (input.StartsWith(IDPrefix))
             {
-                id = input.Substring(1, input.IndexOf(' ') - 1);
-                input = input.Replace(IDPrefix + id + " ", "");
+                if (input.IndexOf(' ') < 0) // in case command contained only id name
+                {
+                    id = input.Substring(1);
+                    input = string.Empty;
+                }
+                else
+                {
+                    id = input.Substring(1, input.IndexOf(' ') - 1);
+                    input = input.Replace(IDPrefix + id + " ", string.Empty);
+                }
             }
 
             for (int c = 0; c < Library.Commands.Count; c++)

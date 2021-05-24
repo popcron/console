@@ -23,6 +23,8 @@ If using 2018.3.x, you can add a new entry to the manifest.json file in your Pac
 ```
 After that, call `Console.Open = false;` in any Start method.
 
+NB: If you are referencing Console with Package manager you will have to create assembly definition for your code and reference it in settings (see FAQ). Otherwise Console will see only its assembly. 
+
 ## Calling commands
 ```cs
 string command = "help";
