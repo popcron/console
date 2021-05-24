@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 public class CommandsBuiltin
 {
     private const string Indent = "    ";
-    private const string TwiceIndent = TwiceIndent;
+    private const string TwiceIndent = Indent + Indent;
 
     [Command("info", "Prints system information.")]
     public static string PrintSystemInfo()
