@@ -424,6 +424,44 @@ namespace Popcron.Console
             }
         }
 
+        /// <summary>
+        /// Submit log text to the console with a specific hex color.
+        /// </summary>
+        public static void WriteLine(object obj, string hexColor)
+        {
+            if (!C.IsIncluded)
+            {
+                return;
+            }
+
+            ConsoleWindow instance = Instance;
+            LogType type = LogType.Log;
+            if (instance)
+            {
+                string stringText = GetStringFromObject(obj);
+                if (stringText == null)
+                {
+                    return;
+                }
+
+                //invoke the event
+                if (onAboutToPrint?.Invoke(obj, stringText, type) == false)
+                {
+                    return;
+                }
+
+                instance.Add(stringText, hexColor);
+                LogToFile(Parser.RemoveRichText(stringText), type.ToString());
+
+                //invoke the printed event
+                onPrinted?.Invoke(stringText, type);
+            }
+            else
+            {
+                lazyWriteLineOperations.Add((obj, type));
+            }
+        }
+
         private void ClearLogFile()
         {
             string path = Settings.Current.LogFilePath;

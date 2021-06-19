@@ -201,14 +201,19 @@ public struct Console
     public static void Print(object message) => C.WriteLine(message, LogType.Log);
 
     /// <summary>
-    /// Prints this object to the console as a log.
+    /// Prints this object to the console as a warning.
     /// </summary>
     public static void Warn(object message) => C.WriteLine(message, LogType.Warning);
 
     /// <summary>
-    /// Prints this object to the console as a log.
+    /// Prints this object to the console with a specific type.
     /// </summary>
     public static void WriteLine(object message, LogType type = LogType.Log) => C.WriteLine(message, type);
+
+    /// <summary>
+    /// Prints this object to the console as a log and a specific hex color.
+    /// </summary>
+    public static void WriteLine(object message, string hexColor) => C.WriteLine(message, hexColor);
 
     /// <summary>
     /// Prints an error to the console window.
@@ -216,7 +221,7 @@ public struct Console
     public static void Error(object message) => C.WriteLine(message, LogType.Error);
 
     /// <summary>
-    /// Prints an error to the console window.
+    /// Prints an exception to the console window.
     /// </summary>
     public static void Exception(object message) => C.WriteLine(message, LogType.Exception);
 }
