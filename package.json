@@ -3,5 +3,14 @@
     "displayName": "Popcron Console",
     "version": "1.8.5",
     "unity": "2018.3",
-    "description": "Command parsing API."
+    "description": "Command parsing API.",
+    "keywords": [
+        "console",
+        "cli"
+    ],
+    "author": {
+        "name": "popcron",
+        "url": "https://github.com/popcron"
+        },
+    "type": "tool"
 }
