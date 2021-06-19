@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Text;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -13,13 +14,7 @@ namespace Popcron.Console
 {
     public class Settings : ScriptableObject
     {
-        public enum DefineSymbolsMode
-        {
-            EnableIfContains,
-            EnableIfAllExist,
-            AlwaysInclude
-        }
-
+        private static StringBuilder stringBuilder = new StringBuilder();
         private static Settings current;
         private static Texture2D pixel;
 
@@ -44,18 +39,7 @@ namespace Popcron.Console
         /// <summary>
         /// The current settings data being used.
         /// </summary>
-        public static Settings Current
-        {
-            get
-            {
-                if (!current)
-                {
-                    current = GetOrCreate();
-                }
-
-                return current;
-            }
-        }
+        public static Settings Current => current;
 
         /// <summary>
         /// The hex value that represents the user typed text color.
@@ -66,7 +50,10 @@ namespace Popcron.Console
             {
                 if (string.IsNullOrEmpty(userColorHex))
                 {
-                    userColorHex = $"#{ColorUtility.ToHtmlStringRGBA(userColor)}";
+                    stringBuilder.Clear();
+                    stringBuilder.Append("#");
+                    stringBuilder.Append(ColorUtility.ToHtmlStringRGBA(userColor));
+                    userColorHex = stringBuilder.ToString();
                 }
 
                 return userColorHex;
@@ -128,6 +115,10 @@ namespace Popcron.Console
         public List<string> startupCommands = new List<string>() { "info" };
         public GUIStyle consoleStyle = new GUIStyle();
         public int scrollAmount = 3;
+
+        [SerializeField]
+        private string formatting = "[{time} {type}] {text}";
+
         public int historySize = 1024;
         public bool logToFile = true;
         public bool checkForOpenInput = true;
@@ -187,6 +178,11 @@ namespace Popcron.Console
         [NonSerialized]
         private string cachedLogFilePath;
 
+        private void OnEnable()
+        {
+            current = this;
+        }
+
         /// <summary>
         /// Is the current scene blacklisted and disallowed.
         /// </summary>
@@ -194,7 +190,8 @@ namespace Popcron.Console
         {
             Scene scene = SceneManager.GetActiveScene();
             string sceneName = scene.name;
-            for (int i = 0; i < blacklistedSceneNames.Count; i++)
+            int sceneCount = blacklistedSceneNames.Count;
+            for (int i = sceneCount - 1; i >= 0; i--)
             {
                 if (blacklistedSceneNames[i].Equals(sceneName))
                 {
@@ -211,7 +208,10 @@ namespace Popcron.Console
             {
                 if (string.IsNullOrEmpty(logColorHex))
                 {
-                    logColorHex = $"#{ColorUtility.ToHtmlStringRGBA(logColor)}";
+                    stringBuilder.Clear();
+                    stringBuilder.Append("#");
+                    stringBuilder.Append(ColorUtility.ToHtmlStringRGBA(logColor));
+                    logColorHex = stringBuilder.ToString();
                 }
 
                 return logColorHex;
@@ -220,7 +220,10 @@ namespace Popcron.Console
             {
                 if (string.IsNullOrEmpty(errorColorHex))
                 {
-                    errorColorHex = $"#{ColorUtility.ToHtmlStringRGBA(errorColor)}";
+                    stringBuilder.Clear();
+                    stringBuilder.Append("#");
+                    stringBuilder.Append(ColorUtility.ToHtmlStringRGBA(errorColor));
+                    errorColorHex = stringBuilder.ToString();
                 }
 
                 return errorColorHex;
@@ -229,7 +232,10 @@ namespace Popcron.Console
             {
                 if (string.IsNullOrEmpty(warnColorHex))
                 {
-                    warnColorHex = $"#{ColorUtility.ToHtmlStringRGBA(warnColor)}";
+                    stringBuilder.Clear();
+                    stringBuilder.Append("#");
+                    stringBuilder.Append(ColorUtility.ToHtmlStringRGBA(warnColor));
+                    warnColorHex = stringBuilder.ToString();
                 }
 
                 return warnColorHex;
@@ -238,7 +244,10 @@ namespace Popcron.Console
             {
                 if (string.IsNullOrEmpty(exceptionColorHex))
                 {
-                    exceptionColorHex = $"#{ColorUtility.ToHtmlStringRGBA(exceptionColor)}";
+                    stringBuilder.Clear();
+                    stringBuilder.Append("#");
+                    stringBuilder.Append(ColorUtility.ToHtmlStringRGBA(exceptionColor));
+                    exceptionColorHex = stringBuilder.ToString();
                 }
 
                 return exceptionColorHex;
@@ -256,7 +265,8 @@ namespace Popcron.Console
         {
             if (!string.IsNullOrEmpty(consoleChararacters))
             {
-                for (int i = 0; i < consoleChararacters.Length; i++)
+                int length = consoleChararacters.Length;
+                for (int i = length - 1; i >= 0; i--)
                 {
                     if (consoleChararacters[i] == c)
                     {
@@ -300,59 +310,21 @@ namespace Popcron.Console
         }
 
         /// <summary>
-        /// Returns an existing console settings asset, or creates a new one if none exist.
+        /// Formats the text that is used to log to disk with.
         /// </summary>
-        public static Settings GetOrCreate()
+        public string FormatText(string text, string logType)
         {
-            //find from resources
-            Settings settings = Resources.Load<Settings>("Console Settings");
-            bool exists = settings;
-            if (!exists)
+            if (text != null)
             {
-                //no console settings asset exists yet, so create one
-                settings = CreateInstance<Settings>();
-                settings.name = "Console Settings";
-                settings.consoleStyle = GetDefaultStyle();
+                stringBuilder.Clear();
+                stringBuilder.Append(formatting);
+                stringBuilder.Replace("{time}", DateTime.Now.ToString());
+                stringBuilder.Replace("{text}", text);
+                stringBuilder.Replace("{type}", logType);
+                return stringBuilder.ToString();
             }
 
-#if UNITY_EDITOR
-            if (!exists)
-            {
-                //ensure the resources folder exists
-                if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-                {
-                    AssetDatabase.CreateFolder("Assets", "Resources");
-                }
-
-                //make a file here
-                string path = "Assets/Resources/Console Settings.asset";
-                AssetDatabase.CreateAsset(settings, path);
-                AssetDatabase.Refresh();
-            }
-#endif
-
-            return settings;
-        }
-
-        /// <summary>
-        /// Returns the default console style.
-        /// </summary>
-        public static GUIStyle GetDefaultStyle()
-        {
-            Font font = Resources.Load<Font>("Hack-Regular");
-            GUIStyle consoleStyle = new GUIStyle
-            {
-                name = "Console",
-                richText = true,
-                alignment = TextAnchor.UpperLeft,
-                font = font,
-                fontSize = 12
-            };
-
-            consoleStyle.normal.textColor = Color.white;
-            consoleStyle.hover.textColor = Color.white;
-            consoleStyle.active.textColor = Color.white;
-            return consoleStyle;
+            return null;
         }
     }
 }

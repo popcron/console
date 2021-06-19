@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 82cb337cb3ba2ee4aa3fbd57a77b72c2
+guid: 1b9b8e523215d30458716163d34c57be
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -8,10 +8,10 @@ TrueTypeFontImporter:
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Hack
   fontNames:
-  - Hack
-  fallbackFontReferences: []
+  - Cascadia Mono
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 32f8f4eb8053b524c887acd51e90d930, type: 3}
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1

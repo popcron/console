@@ -1,4 +1,4 @@
-#pragma warning disable CS0162 // Unreachable code detected
+#pragma warning disable CS0162 //unreachable code detected
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +18,7 @@ namespace Popcron.Console
         private const string ConsoleControlName = "ControlField";
         private static ReadOnlyCollection<string> emptyHistory;
         private static ReadOnlyCollection<string> emptyText;
+        private static List<(object, LogType)> lazyWriteLineOperations = new List<(object, LogType)>();
         private static StringBuilder suggestionsText = new StringBuilder();
 
         public delegate bool OnAboutToPrint(object obj, string text, LogType type);
@@ -30,7 +31,8 @@ namespace Popcron.Console
         {
             get
             {
-                int lines = Mathf.RoundToInt(Screen.height * 0.45f / 16);
+                float fontSize = Settings.Current.consoleStyle.fontSize;
+                int lines = Mathf.RoundToInt(Screen.height * 0.45f / fontSize);
                 return Mathf.Clamp(lines, 4, 32);
             }
         }
@@ -44,7 +46,11 @@ namespace Popcron.Console
             {
                 if (!instance)
                 {
-                    instance = GetOrCreate();
+                    ConsoleWindow[] consoleWindows = Resources.FindObjectsOfTypeAll<ConsoleWindow>();
+                    if (consoleWindows.Length > 0)
+                    {
+                        instance = consoleWindows[0];
+                    }
                 }
 
                 return instance;
@@ -228,7 +234,7 @@ namespace Popcron.Console
         private ReadOnlyCollection<string> historyReadOnly;
         private ReadOnlyCollection<string> textReadOnly;
 
-        private void Awake()
+        public void Initialize()
         {
             text.Clear();
             history.Clear();
@@ -238,17 +244,25 @@ namespace Popcron.Console
             linesString = null;
             historyReadOnly = null;
             textReadOnly = null;
-        }
 
-        private void Start()
-        {
-            ClearLogFile();
-
-            //run the init commands
-            for (int i = 0; i < Settings.Current.startupCommands.Count; i++)
+            if (Application.isPlaying)
             {
-                string command = Settings.Current.startupCommands[i];
-                C.Run(command);
+                ClearLogFile();
+                WriteLine("Initialized");
+
+                //run the init commands
+                foreach (string command in Settings.Current.startupCommands)
+                {
+                    C.Run(command);
+                }
+
+                //print the lazy operations
+                foreach ((object obj, LogType logType) operation in lazyWriteLineOperations)
+                {
+                    WriteLine(operation.obj, operation.logType);
+                }
+
+                lazyWriteLineOperations.Clear();
             }
         }
 
@@ -260,6 +274,11 @@ namespace Popcron.Console
 
             //adds a listener for debug prints in editor
             Application.logMessageReceived += HandleLog;
+        }
+
+        private void OnApplicationQuit()
+        {
+            WriteLine("OnApplicationQuit");
         }
 
         private void OnDisable()
@@ -358,9 +377,13 @@ namespace Popcron.Console
             TextInput = "";
 
             //clear text
-            Instance.rawText.Clear();
-            Instance.text.Clear();
-            Instance.UpdateText();
+            ConsoleWindow instance = Instance;
+            if (instance)
+            {
+                instance.rawText.Clear();
+                instance.text.Clear();
+                instance.UpdateText();
+            }
         }
 
         /// <summary>
@@ -373,24 +396,32 @@ namespace Popcron.Console
                 return;
             }
 
-            string stringText = GetStringFromObject(obj);
-            if (stringText == null)
+            ConsoleWindow instance = Instance;
+            if (instance)
             {
-                return;
-            }
+                string stringText = GetStringFromObject(obj);
+                if (stringText == null)
+                {
+                    return;
+                }
 
-            //invoke the event
-            if (onAboutToPrint?.Invoke(obj, stringText, type) == false)
+                //invoke the event
+                if (onAboutToPrint?.Invoke(obj, stringText, type) == false)
+                {
+                    return;
+                }
+
+                string color = Settings.Current.GetColor(type);
+                instance.Add(stringText, color);
+                LogToFile(Parser.RemoveRichText(stringText), type.ToString());
+
+                //invoke the printed event
+                onPrinted?.Invoke(stringText, type);
+            }
+            else
             {
-                return;
+                lazyWriteLineOperations.Add((obj, type));
             }
-
-            string color = Settings.Current.GetColor(type);
-            Instance.Add(stringText, color);
-            LogToFile(Parser.RemoveRichText(stringText), type.ToString());
-
-            //invoke the printed event
-            onPrinted?.Invoke(stringText, type);
         }
 
         private void ClearLogFile()
@@ -400,10 +431,11 @@ namespace Popcron.Console
             {
                 File.WriteAllText(path, "");
             }
-
-            LogToFile("Hello World!");
         }
 
+        /// <summary>
+        /// Writes this text with this log type to a file on disk.
+        /// </summary>
         private static void LogToFile(string text, string logType = null)
         {
             if (Settings.Current.logToFile)
@@ -440,20 +472,13 @@ namespace Popcron.Console
                 }
 
                 //append thy file
-                using (StreamWriter stream = File.AppendText(path))
+                text = Settings.Current.FormatText(text, logType);
+                if (text != null)
                 {
-                    stream.Write('[');
-                    stream.Write(DateTime.Now.ToString());
-
-                    //put the log type as long as its not null
-                    if (!string.IsNullOrEmpty(logType))
+                    using (StreamWriter stream = File.AppendText(path))
                     {
-                        stream.Write(' ');
-                        stream.Write(logType);
+                        stream.WriteLine(text);
                     }
-
-                    stream.Write("] ");
-                    stream.WriteLine(text);
                 }
             }
         }
@@ -1013,33 +1038,6 @@ namespace Popcron.Console
                 textInput = "";
                 typedSomething = false;
             }
-        }
-
-        /// <summary>
-        /// Returns an existing or creates a new console window instance with these settings.
-        /// </summary>
-        public static ConsoleWindow GetOrCreate()
-        {
-            if (!C.IsIncluded)
-            {
-                return null;
-            }
-
-            //is this scene blacklisted?
-            if (Settings.Current.IsSceneBlacklisted())
-            {
-                return null;
-            }
-
-            //find a console window component in this scene
-            ConsoleWindow consoleWindow = FindObjectOfType<ConsoleWindow>();
-            if (!consoleWindow)
-            {
-                //none present, create a new hidden one
-                consoleWindow = new GameObject("Console").AddComponent<ConsoleWindow>();
-            }
-
-            return consoleWindow;
         }
     }
 }

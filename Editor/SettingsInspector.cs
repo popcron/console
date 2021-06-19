@@ -16,6 +16,11 @@ namespace Popcron.Console
 
         public static void Show(SerializedObject serializedObject)
         {
+            if (serializedObject == null || !(serializedObject.targetObject is Settings))
+            {
+                return;
+            }
+
             Settings settings = serializedObject.targetObject as Settings;
             SerializedProperty userColor = serializedObject.FindProperty("userColor");
             SerializedProperty logColor = serializedObject.FindProperty("logColor");
@@ -28,6 +33,7 @@ namespace Popcron.Console
             SerializedProperty historySize = serializedObject.FindProperty("historySize");
             SerializedProperty logToFile = serializedObject.FindProperty("logToFile");
             SerializedProperty reportUnknownCommand = serializedObject.FindProperty("reportUnknownCommand");
+            SerializedProperty formatting = serializedObject.FindProperty("formatting");
             SerializedProperty checkForOpenInput = serializedObject.FindProperty("checkForOpenInput");
 
             //show the colours first
@@ -45,7 +51,7 @@ namespace Popcron.Console
             ShowAssemblies(settings, serializedObject);
 
             //allowance filter
-            ShowAllowanceFilter = EditorGUILayout.Foldout(ShowAllowanceFilter, "Filter");
+            ShowAllowanceFilter = EditorGUILayout.Foldout(ShowAllowanceFilter, "Filter", true);
             if (ShowAllowanceFilter)
             {
                 SerializedProperty allowAsserts = serializedObject.FindProperty("allowAsserts");
@@ -64,23 +70,25 @@ namespace Popcron.Console
             }
 
             EditorGUILayout.PropertyField(reportUnknownCommand, new GUIContent("Report unknown command"));
+            EditorGUILayout.PropertyField(formatting, new GUIContent("Formatting"));
             EditorGUILayout.PropertyField(scrollAmount, new GUIContent("Scroll amount"));
             EditorGUILayout.PropertyField(historySize, new GUIContent("History size"));
 
             //show the keys that gon be used
             EditorGUILayout.PropertyField(checkForOpenInput, new GUIContent("Built-in open check"));
-            if (checkForOpenInput.boolValue)
             {
+                EditorGUI.BeginDisabledGroup(!checkForOpenInput.boolValue);
                 SerializedProperty consoleChararacters = serializedObject.FindProperty("consoleChararacters");
 
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(consoleChararacters, new GUIContent("Console open keys"));
                 EditorGUI.indentLevel--;
+                EditorGUI.EndDisabledGroup();
             }
 
             EditorGUILayout.PropertyField(logToFile, new GUIContent("Log to file"));
-            if (logToFile.boolValue)
             {
+                EditorGUI.BeginDisabledGroup(!logToFile.boolValue);
                 SerializedProperty logFilePathPlayer = serializedObject.FindProperty("logFilePathPlayer");
                 SerializedProperty logFilePathEditor = serializedObject.FindProperty("logFilePathEditor");
 
@@ -88,6 +96,7 @@ namespace Popcron.Console
                 EditorGUILayout.PropertyField(logFilePathPlayer, new GUIContent("Log path for player"));
                 EditorGUILayout.PropertyField(logFilePathEditor, new GUIContent("Log path for editor"));
                 EditorGUI.indentLevel--;
+                EditorGUI.EndDisabledGroup();
             }
 
             serializedObject.ApplyModifiedProperties();
