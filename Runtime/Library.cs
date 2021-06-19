@@ -41,8 +41,15 @@ namespace Popcron.Console
         {
             get
             {
-                if (assemblies == null)
+                if (assemblies == null || assemblies.Count == 0)
                 {
+                    //possible in some cases
+                    if (!Settings.Current)
+                    {
+                        assemblies = new List<(Assembly assembly, Type[] types)>();
+                        return assemblies;
+                    }
+
                     List<string> allAssemblies = Settings.Current.assemblies.ToList();
                     Assembly executingAssembly = Assembly.GetExecutingAssembly();
                     Assembly callingAssembly = Assembly.GetCallingAssembly();
