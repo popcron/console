@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using C = Console;
 
 namespace Popcron.Console
@@ -46,11 +47,16 @@ namespace Popcron.Console
             {
                 if (!instance)
                 {
+#if UNITY_EDITOR
                     ConsoleWindow[] consoleWindows = Resources.FindObjectsOfTypeAll<ConsoleWindow>();
                     if (consoleWindows.Length > 0)
                     {
                         instance = consoleWindows[0];
                     }
+#else
+                    instance = CreateConsoleWindow();
+                    instance.Initialize();
+#endif
                 }
 
                 return instance;
@@ -69,7 +75,15 @@ namespace Popcron.Console
                     return null;
                 }
 
-                return Instance.textInput;
+                ConsoleWindow instance = Instance;
+                if (instance)
+                {
+                    return instance.textInput;
+                }
+                else
+                {
+                    return null;
+                }
             }
             set
             {
@@ -78,7 +92,11 @@ namespace Popcron.Console
                     return;
                 }
 
-                Instance.textInput = Parser.Sanitize(value);
+                ConsoleWindow instance = Instance;
+                if (instance)
+                {
+                    instance.textInput = Parser.Sanitize(value);
+                }
             }
         }
 
@@ -94,7 +112,15 @@ namespace Popcron.Console
                     return false;
                 }
 
-                return Instance.isOpen;
+                ConsoleWindow instance = Instance;
+                if (instance)
+                {
+                    return instance.isOpen;
+                }
+                else
+                {
+                    return false;
+                }
             }
             set
             {
@@ -103,13 +129,17 @@ namespace Popcron.Console
                     return;
                 }
 
-                Instance.textInput = null;
-                Instance.isOpen = value;
-                if (value)
+                ConsoleWindow instance = Instance;
+                if (instance)
                 {
-                    Instance.typedSomething = false;
-                    Instance.index = Instance.history.Count;
-                    Instance.Search(null);
+                    instance.textInput = null;
+                    instance.isOpen = value;
+                    if (value)
+                    {
+                        instance.typedSomething = false;
+                        instance.index = Instance.history.Count;
+                        instance.Search(null);
+                    }
                 }
             }
         }
@@ -122,7 +152,7 @@ namespace Popcron.Console
         }
 
         /// <summary>
-        /// The amount of lines that a single scroll should perform.
+        /// The scroll position of the text in the window.
         /// </summary>
         public static int ScrollPosition
         {
@@ -133,7 +163,15 @@ namespace Popcron.Console
                     return 0;
                 }
 
-                return Instance.scrollPosition;
+                ConsoleWindow instance = Instance;
+                if (instance)
+                {
+                    return instance.scrollPosition;
+                }
+                else
+                {
+                    return 0;
+                }
             }
             set
             {
@@ -153,7 +191,11 @@ namespace Popcron.Console
                     value = historySize - 1;
                 }
 
-                Instance.scrollPosition = value;
+                ConsoleWindow instance = Instance;
+                if (instance)
+                {
+                    instance.scrollPosition = value;
+                }
             }
         }
 
@@ -175,12 +217,20 @@ namespace Popcron.Console
                 }
 
                 //recreate if different
-                if (Instance.historyReadOnly == null || Instance.historyReadOnly.Count != Instance.history.Count)
+                ConsoleWindow instance = Instance;
+                if (instance)
                 {
-                    Instance.historyReadOnly = Instance.history.AsReadOnly();
-                }
+                    if (instance.historyReadOnly == null || instance.historyReadOnly.Count != instance.history.Count)
+                    {
+                        instance.historyReadOnly = instance.history.AsReadOnly();
+                    }
 
-                return Instance.historyReadOnly;
+                    return instance.historyReadOnly;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -202,12 +252,20 @@ namespace Popcron.Console
                 }
 
                 //recreate if different
-                if (Instance.textReadOnly == null || Instance.textReadOnly.Count != Instance.text.Count)
+                ConsoleWindow instance = Instance;
+                if (instance)
                 {
-                    Instance.textReadOnly = Instance.text.AsReadOnly();
-                }
+                    if (instance.textReadOnly == null || instance.textReadOnly.Count != instance.text.Count)
+                    {
+                        instance.textReadOnly = instance.text.AsReadOnly();
+                    }
 
-                return Instance.textReadOnly;
+                    return instance.textReadOnly;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -1076,6 +1134,32 @@ namespace Popcron.Console
                 textInput = "";
                 typedSomething = false;
             }
+        }
+
+        /// <summary>
+        /// Creates a new console window instance without initializing it.
+        /// </summary>
+        public static ConsoleWindow CreateConsoleWindow()
+        {
+            if (!C.IsIncluded)
+            {
+                return null;
+            }
+
+            //is this scene blacklisted?
+            if (Settings.Current.IsSceneBlacklisted())
+            {
+                Scene currentScene = SceneManager.GetActiveScene();
+                Debug.LogWarning($"Console window will not be created in blacklisted scene {currentScene.name}");
+                return null;
+            }
+
+            ConsoleWindow consoleWindow = new GameObject(nameof(ConsoleWindow)).AddComponent<ConsoleWindow>();
+            const HideFlags Flags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild |
+                                    HideFlags.NotEditable | HideFlags.DontUnloadUnusedAsset |
+                                    HideFlags.HideInHierarchy | HideFlags.HideInInspector;
+            consoleWindow.gameObject.hideFlags = Flags;
+            return consoleWindow;
         }
     }
 }

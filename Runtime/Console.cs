@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS0162 // Unreachable code detected
+﻿#pragma warning disable CS0162 //unreachable code detected
 
 using Popcron.Console;
 using System;

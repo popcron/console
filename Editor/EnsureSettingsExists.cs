@@ -1,12 +1,9 @@
-﻿#pragma warning disable CS0162 //unreachable code detected
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using C = Console;
 
 namespace Popcron.Console
 {
@@ -29,7 +26,7 @@ namespace Popcron.Console
         {
             if (!DoesConsoleWindowExist())
             {
-                CreateConsoleWindow();
+                ConsoleWindow.CreateConsoleWindow();
             }
         }
 
@@ -77,30 +74,6 @@ namespace Popcron.Console
                     Object.DestroyImmediate(consoleWindows[i].gameObject);
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns an existing or creates a new console window instance with these settings.
-        /// </summary>
-        private static void CreateConsoleWindow()
-        {
-            if (!C.IsIncluded)
-            {
-                return;
-            }
-
-            //is this scene blacklisted?
-            if (Settings.Current.IsSceneBlacklisted())
-            {
-                return;
-            }
-
-            ConsoleWindow consoleWindow = new GameObject("Console").AddComponent<ConsoleWindow>();
-            const HideFlags Flags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild |
-                                    HideFlags.NotEditable | HideFlags.DontUnloadUnusedAsset |
-                                    HideFlags.HideInHierarchy | HideFlags.HideInInspector;
-            consoleWindow.gameObject.hideFlags = Flags;
-            consoleWindow.Initialize();
         }
 
         /// <summary>
