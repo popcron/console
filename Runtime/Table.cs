@@ -23,6 +23,7 @@ namespace Popcron.Console
         private int columns;
         private int rows;
         private List<object[]> cells;
+        private Dictionary<string, int> richTextOffset;
 
         private Table()
         {
@@ -34,6 +35,7 @@ namespace Popcron.Console
             if (row != null && row.Length != 0)
             {
                 cells = new List<object[]>();
+                richTextOffset = new Dictionary<string, int>();
                 columns = row.Length;
                 rows = 1;
                 cells.Add(row);
@@ -93,25 +95,47 @@ namespace Popcron.Console
                 {
                     object cell = cells[r][c];
                     string text;
+                    int length = 0;
                     if (cell is bool)
                     {
                         text = ((bool)cell) ? TrueString : FalseString;
+                        richTextOffset[text] = 0;
+
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            length = text.Length;
+                        }
                     }
                     else
                     {
                         if (cell is null)
                         {
                             text = NullString;
+                            richTextOffset[text] = 0;
+
+                            if (!string.IsNullOrEmpty(text))
+                            {
+                                length = text.Length;
+                            }
                         }
                         else
                         {
                             text = cell.ToString();
-                            text = Parser.RemoveRichText(text);
+                            if (!string.IsNullOrEmpty(text))
+                            {
+                                int richTextCount = CountRichTextLength(text);
+                                length = text.Length - richTextCount;
+                                richTextOffset[text] = richTextCount;
+                            }
+                            else
+                            {
+                                richTextOffset[text] = 0;
+                            }
                         }
                     }
 
                     texts[c, r] = text;
-                    maxLength = Mathf.Max(maxLength, text?.Length ?? 0);
+                    maxLength = Mathf.Max(maxLength, length);
                 }
 
                 maxLengths[c] = maxLength;
@@ -134,7 +158,7 @@ namespace Popcron.Console
 
                     if (text != null)
                     {
-                        AppendPadRight(text, totalLength);
+                        AppendPadRight(text, totalLength + richTextOffset[text]);
                         if (c < columns - 1)
                         {
                             builder.Append(ColumnSeparator);
@@ -154,6 +178,7 @@ namespace Popcron.Console
 
                 if (r == 0)
                 {
+                    //header row
                     builder.AppendLine();
                     AppendRepeatingString(HeaderSeparator, totalWidth);
                     builder.AppendLine();
@@ -165,6 +190,33 @@ namespace Popcron.Console
             }
 
             return builder.ToString();
+        }
+
+        private int CountRichTextLength(string text)
+        {
+            int count = 0;
+            int textLength = text.Length;
+            bool insideTag = false;
+            for (int i = 0; i < textLength; i++)
+            {
+                char c = text[i];
+                if (c == '<')
+                {
+                    insideTag = true;
+                }
+
+                if (insideTag)
+                {
+                    count++;
+                }
+
+                if (c == '>')
+                {
+                    insideTag = false;
+                }
+            }
+
+            return count;
         }
 
         private void AppendPadRight(string text, int totalWidth)
