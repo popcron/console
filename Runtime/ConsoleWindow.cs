@@ -15,6 +15,14 @@ namespace Popcron.Console
     [AddComponentMenu("")]
     public class ConsoleWindow : MonoBehaviour
     {
+#if UNITY_EDITOR
+        /// <summary>
+        /// All console windows in the scene.
+        /// Editor only.
+        /// </summary>
+        public static List<ConsoleWindow> All { get; private set; } = new List<ConsoleWindow>();
+#endif
+
         private static ConsoleWindow instance;
         private const string ConsoleControlName = "ControlField";
         private static ReadOnlyCollection<string> emptyHistory;
@@ -326,6 +334,7 @@ namespace Popcron.Console
 
         private void OnEnable()
         {
+            All.Add(this);
             Library.FindCategories();
             Library.FindCommands();
             Converter.FindConverters();
@@ -334,14 +343,15 @@ namespace Popcron.Console
             Application.logMessageReceived += HandleLog;
         }
 
+        private void OnDisable()
+        {
+            All.Remove(this);
+            Application.logMessageReceived -= HandleLog;
+        }
+
         private void OnApplicationQuit()
         {
             WriteLine("OnApplicationQuit");
-        }
-
-        private void OnDisable()
-        {
-            Application.logMessageReceived -= HandleLog;
         }
 
         private void HandleLog(string message, string stack, LogType logType)

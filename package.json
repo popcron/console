@@ -1,7 +1,7 @@
 {
     "name": "com.popcron.console",
     "displayName": "Popcron Console",
-    "version": "1.8.10",
+    "version": "1.8.11",
     "unity": "2018.3",
     "description": "Command parsing API.",
     "keywords": [
@@ -11,6 +11,6 @@
     "author": {
         "name": "popcron",
         "url": "https://github.com/popcron"
-        },
+    },
     "type": "tool"
 }

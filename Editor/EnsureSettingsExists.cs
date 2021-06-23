@@ -26,7 +26,8 @@ namespace Popcron.Console
         {
             if (!DoesConsoleWindowExist())
             {
-                ConsoleWindow.CreateConsoleWindow();
+                ConsoleWindow consoleWindow = ConsoleWindow.CreateConsoleWindow();
+                consoleWindow.Initialize();
             }
         }
 
@@ -51,9 +52,17 @@ namespace Popcron.Console
             ConsoleWindow[] consoleWindows = Resources.FindObjectsOfTypeAll<ConsoleWindow>();
             for (int i = 0; i < consoleWindows.Length; i++)
             {
-                if (consoleWindows[i])
+                ref ConsoleWindow consoleWindow = ref consoleWindows[i];
+                if (consoleWindow)
                 {
-                    return true;
+                    if (ConsoleWindow.All.Contains(consoleWindow))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        Object.DestroyImmediate(consoleWindow);
+                    }
                 }
             }
 
