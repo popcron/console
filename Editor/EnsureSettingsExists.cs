@@ -26,6 +26,11 @@ namespace Popcron.Console
         {
             if (!DoesConsoleWindowExist())
             {
+                if (!Settings.Current)
+                {
+                    CreateSettings();
+                }
+
                 ConsoleWindow consoleWindow = ConsoleWindow.CreateConsoleWindow();
                 consoleWindow.Initialize();
             }
