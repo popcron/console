@@ -1145,31 +1145,5 @@ namespace Popcron.Console
                 typedSomething = false;
             }
         }
-
-        /// <summary>
-        /// Creates a new console window instance without initializing it.
-        /// </summary>
-        public static ConsoleWindow CreateConsoleWindow()
-        {
-            if (!C.IsIncluded)
-            {
-                return null;
-            }
-
-            //is this scene blacklisted?
-            if (Settings.Current.IsSceneBlacklisted())
-            {
-                Scene currentScene = SceneManager.GetActiveScene();
-                Debug.LogWarning($"Console window will not be created in blacklisted scene {currentScene.name}");
-                return null;
-            }
-
-            ConsoleWindow consoleWindow = new GameObject(nameof(ConsoleWindow)).AddComponent<ConsoleWindow>();
-            const HideFlags Flags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild |
-                                    HideFlags.NotEditable | HideFlags.DontUnloadUnusedAsset |
-                                    HideFlags.HideInHierarchy | HideFlags.HideInInspector;
-            consoleWindow.gameObject.hideFlags = Flags;
-            return consoleWindow;
-        }
     }
 }

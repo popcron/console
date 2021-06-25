@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿#pragma warning disable CS0162 //unreachable code detected
+
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using C = global::Console;
 
 namespace Popcron.Console
 {
@@ -31,8 +34,7 @@ namespace Popcron.Console
                     CreateSettings();
                 }
 
-                ConsoleWindow consoleWindow = ConsoleWindow.CreateConsoleWindow();
-                consoleWindow.Initialize();
+                CreateConsoleWindow();
             }
         }
 
@@ -54,15 +56,16 @@ namespace Popcron.Console
 
         private static bool DoesConsoleWindowExist()
         {
+            bool exists = false;
             ConsoleWindow[] consoleWindows = Resources.FindObjectsOfTypeAll<ConsoleWindow>();
             for (int i = 0; i < consoleWindows.Length; i++)
             {
                 ref ConsoleWindow consoleWindow = ref consoleWindows[i];
                 if (consoleWindow)
                 {
-                    if (ConsoleWindow.All.Contains(consoleWindow))
+                    if (!exists && ConsoleWindow.All.Contains(consoleWindow))
                     {
-                        return true;
+                        exists = true;
                     }
                     else
                     {
@@ -71,7 +74,7 @@ namespace Popcron.Console
                 }
             }
 
-            return false;
+            return exists;
         }
 
         private static void ClearAllConsoleWindows()
@@ -165,6 +168,32 @@ namespace Popcron.Console
             }
 
             PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
+        }
+
+        /// <summary>
+        /// Creates a new console window instance without initializing it.
+        /// </summary>
+        public static ConsoleWindow CreateConsoleWindow()
+        {
+            if (!C.IsIncluded)
+            {
+                return null;
+            }
+
+            //is this scene blacklisted?
+            if (Settings.Current.IsSceneBlacklisted())
+            {
+                Scene currentScene = SceneManager.GetActiveScene();
+                Debug.LogWarning($"Console window will not be created in blacklisted scene {currentScene.name}");
+                return null;
+            }
+
+            ConsoleWindow consoleWindow = new GameObject(nameof(ConsoleWindow)).AddComponent<ConsoleWindow>();
+            const HideFlags Flags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild |
+                                    HideFlags.HideInHierarchy | HideFlags.HideInInspector;
+            consoleWindow.gameObject.hideFlags = Flags;
+            consoleWindow.Initialize();
+            return consoleWindow;
         }
     }
 }
