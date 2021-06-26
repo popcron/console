@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using C = global::Console;
@@ -13,45 +12,11 @@ namespace Popcron.Console
     [InitializeOnLoad]
     public class EnsureSettingsExist
     {
-        static EnsureSettingsExist()
-        {
-            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-
-            EditorApplication.update -= OnUpdate;
-            EditorApplication.update += OnUpdate;
-
-            EditorSceneManager.activeSceneChangedInEditMode -= OnSceneChanged;
-            EditorSceneManager.activeSceneChangedInEditMode += OnSceneChanged;
-        }
-
-        private static void OnUpdate()
-        {
-            if (!DoesConsoleWindowExist())
-            {
-                if (!Settings.Current)
-                {
-                    CreateSettings();
-                }
-
-                CreateConsoleWindow();
-            }
-        }
-
-        private static void OnSceneChanged(Scene oldScene, Scene newScene)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RuntimeInitialize()
         {
             ClearAllConsoleWindows();
-            CreateSettings();
-        }
-
-        private static void OnPlayModeStateChanged(PlayModeStateChange playModeStateChange)
-        {
-            if (playModeStateChange == PlayModeStateChange.EnteredEditMode)
-            {
-                ClearAllConsoleWindows();
-            }
-
-            CreateSettings();
+            CreateConsoleWindow();
         }
 
         private static bool DoesConsoleWindowExist()
@@ -189,10 +154,10 @@ namespace Popcron.Console
             }
 
             ConsoleWindow consoleWindow = new GameObject(nameof(ConsoleWindow)).AddComponent<ConsoleWindow>();
-            const HideFlags Flags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild |
-                                    HideFlags.HideInHierarchy | HideFlags.HideInInspector;
+            const HideFlags Flags = HideFlags.DontSaveInBuild | HideFlags.NotEditable;
             consoleWindow.gameObject.hideFlags = Flags;
             consoleWindow.Initialize();
+            Object.DontDestroyOnLoad(consoleWindow.gameObject);
             return consoleWindow;
         }
     }
