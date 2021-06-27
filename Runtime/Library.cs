@@ -77,6 +77,16 @@ namespace Popcron.Console
                         allAssemblies.Add(consoleAssembly.FullName);
                     }
 
+                    if (allAssemblies.Contains("Assembly-CSharp"))
+                    {
+                        allAssemblies.Add("Assembly-CSharp");
+                    }
+
+                    if (allAssemblies.Contains("Assembly-CSharp-Editor"))
+                    {
+                        allAssemblies.Add("Assembly-CSharp-Editor");
+                    }
+
                     assemblies = new List<(Assembly assembly, Type[] types)>();
                     for (int a = 0; a < allAssemblies.Count; a++)
                     {
