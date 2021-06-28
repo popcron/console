@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using C = global::Console;
 
 namespace Popcron.Console
 {
@@ -16,30 +14,13 @@ namespace Popcron.Console
         private static void RuntimeInitialize()
         {
             ClearAllConsoleWindows();
-            CreateConsoleWindow();
+            ConsoleWindow.CreateConsoleWindow();
+            CreateSettings();
         }
 
-        private static bool DoesConsoleWindowExist()
+        static EnsureSettingsExist()
         {
-            bool exists = false;
-            ConsoleWindow[] consoleWindows = Resources.FindObjectsOfTypeAll<ConsoleWindow>();
-            for (int i = 0; i < consoleWindows.Length; i++)
-            {
-                ref ConsoleWindow consoleWindow = ref consoleWindows[i];
-                if (consoleWindow)
-                {
-                    if (!exists && ConsoleWindow.All.Contains(consoleWindow))
-                    {
-                        exists = true;
-                    }
-                    else
-                    {
-                        Object.DestroyImmediate(consoleWindow);
-                    }
-                }
-            }
-
-            return exists;
+            CreateSettings();
         }
 
         private static void ClearAllConsoleWindows()
@@ -133,32 +114,6 @@ namespace Popcron.Console
             }
 
             PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
-        }
-
-        /// <summary>
-        /// Creates a new console window instance without initializing it.
-        /// </summary>
-        public static ConsoleWindow CreateConsoleWindow()
-        {
-            if (!C.IsIncluded)
-            {
-                return null;
-            }
-
-            //is this scene blacklisted?
-            if (Settings.Current.IsSceneBlacklisted())
-            {
-                Scene currentScene = SceneManager.GetActiveScene();
-                Debug.LogWarning($"Console window will not be created in blacklisted scene {currentScene.name}");
-                return null;
-            }
-
-            ConsoleWindow consoleWindow = new GameObject(nameof(ConsoleWindow)).AddComponent<ConsoleWindow>();
-            const HideFlags Flags = HideFlags.DontSaveInBuild | HideFlags.NotEditable;
-            consoleWindow.gameObject.hideFlags = Flags;
-            consoleWindow.Initialize();
-            Object.DontDestroyOnLoad(consoleWindow.gameObject);
-            return consoleWindow;
         }
     }
 }

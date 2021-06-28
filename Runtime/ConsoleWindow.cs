@@ -15,13 +15,10 @@ namespace Popcron.Console
     [AddComponentMenu("")]
     public class ConsoleWindow : MonoBehaviour
     {
-#if UNITY_EDITOR
         /// <summary>
         /// All console windows in the scene.
-        /// Editor only.
         /// </summary>
         public static List<ConsoleWindow> All { get; private set; } = new List<ConsoleWindow>();
-#endif
 
         private static ConsoleWindow instance;
         private const string ConsoleControlName = "ControlField";
@@ -62,8 +59,7 @@ namespace Popcron.Console
                         instance = consoleWindows[0];
                     }
 #else
-                    instance = CreateConsoleWindow();
-                    instance.Initialize();
+                    CreateConsoleWindow();
 #endif
                 }
 
@@ -1144,6 +1140,32 @@ namespace Popcron.Console
                 textInput = "";
                 typedSomething = false;
             }
+        }
+
+        /// <summary>
+        /// Creates a new console window instance without initializing it.
+        /// </summary>
+        public static void CreateConsoleWindow()
+        {
+            if (!C.IsIncluded)
+            {
+                return;
+            }
+
+            //is this scene blacklisted?
+            Settings settings = Settings.Current;
+            if (settings && settings.IsSceneBlacklisted())
+            {
+                Scene currentScene = SceneManager.GetActiveScene();
+                Debug.LogWarning($"Console window will not be created in blacklisted scene {currentScene.name}");
+                return;
+            }
+
+            instance = new GameObject(nameof(ConsoleWindow)).AddComponent<ConsoleWindow>();
+            const HideFlags Flags = HideFlags.DontSaveInBuild | HideFlags.NotEditable;
+            instance.gameObject.hideFlags = Flags;
+            instance.Initialize();
+            DontDestroyOnLoad(instance.gameObject);
         }
     }
 }
