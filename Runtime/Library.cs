@@ -249,6 +249,43 @@ namespace Popcron.Console
             return false;
         }
 
+        public static void RemoveCommand(Command command)
+        {
+            if (commands != null)
+            {
+                //remove from all
+                int hashCode = command.GetHashCode();
+                int count = Commands.Count;
+                for (int i = count - 1; i >= 0; i--)
+                {
+                    Command existingCommand = Commands[i];
+                    if (existingCommand.GetHashCode() == hashCode)
+                    {
+                        Commands.RemoveAt(i);
+                    }
+                }
+
+                //remove in all cats
+                count = Categories.Count;
+                for (int i = count - 1; i >= 0; i--)
+                {
+                    Category category = Categories[i];
+                    int commandCount = category.Commands.Count;
+                    for (int b = commandCount - 1; b >= 0; b--)
+                    {
+                        Command existingCommand = category.Commands[b];
+                        if (existingCommand.GetHashCode() == hashCode)
+                        {
+                            category.Commands.RemoveAt(b);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a command to the registry manually.
+        /// </summary>
         public static void AddCommand(Command command, string category = null)
         {
             if (commands == null)
