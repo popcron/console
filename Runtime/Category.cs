@@ -17,10 +17,9 @@ namespace Popcron.Console
             this.name = name;
         }
 
-        public static Category CreateUncategorized()
+        public static Category Create(string name)
         {
-            Category category = new Category("Uncategorized");
-            return category;
+            return new Category(name);
         }
 
         public static Category Create(Type type)
@@ -31,11 +30,13 @@ namespace Popcron.Console
                 return null;
             }
 
-            Category category = new Category(attribute.name);
+            Category category = new Category(attribute.Name);
             List<Command> commands = Library.Commands;
-            foreach (Command command in commands)
+            int commandsCount = commands.Count;
+            for (int i = 0; i < commandsCount; i++)
             {
-                if (command.Owner == type)
+                Command command = commands[i];
+                if (command.OwnerClass == type)
                 {
                     category.commands.Add(command);
                 }

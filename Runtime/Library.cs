@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
 
 namespace Popcron.Console
 {
@@ -12,6 +11,9 @@ namespace Popcron.Console
         private static List<Command> commands = null;
         private static List<Category> categories = null;
 
+        /// <summary>
+        /// List of all commands found.
+        /// </summary>
         public static List<Command> Commands
         {
             get
@@ -22,6 +24,20 @@ namespace Popcron.Console
                 }
 
                 return commands;
+            }
+        }
+
+        public static Category Uncategorized
+        {
+            get
+            {
+                if (!TryGetCategory("Uncategorized", out Category category))
+                {
+                    category = Category.Create("Uncategorized");
+                    categories.Add(category);
+                }
+
+                return category;
             }
         }
 
@@ -122,6 +138,11 @@ namespace Popcron.Console
 
         private static void AddAssembly(string name, bool searchAppDomain = false)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+
             try
             {
                 Assembly assemblyToLoad = null;
@@ -146,7 +167,6 @@ namespace Popcron.Console
 
                 if (assemblyToLoad != null)
                 {
-                    Debug.Log($"loaded assembly {name}");
                     Type[] types = assemblyToLoad.GetTypes();
                     assemblies.Add((assemblyToLoad, types));
                 }
@@ -162,14 +182,15 @@ namespace Popcron.Console
             if (categories == null)
             {
                 categories = new List<Category>();
-                HashSet<Type> typesWithoutCategories = new HashSet<Type>();
+                HashSet<Type> classTypesWithoutCategories = new HashSet<Type>();
                 for (int a = 0; a < Assemblies.Count; a++)
                 {
                     Type[] types = Assemblies[a].types;
-                    for (int t = 0; t < types.Length; t++)
+                    int typesLength = types.Length;
+                    for (int t = 0; t < typesLength; t++)
                     {
-                        Type type = types[t];
-                        Category category = Category.Create(type);
+                        Type classType = types[t];
+                        Category category = Category.Create(classType);
                         if (category != null)
                         {
                             if (TryGetCategory(category.Name, out Category existingCategory))
@@ -183,31 +204,28 @@ namespace Popcron.Console
                         }
                         else
                         {
-                            typesWithoutCategories.Add(type);
+                            classTypesWithoutCategories.Add(classType);
+                        }
+                    }
+                }
+
+                //put any commands that arent defined inside classes with a Category attribute
+                //into the uncategorized category
+                if (classTypesWithoutCategories.Count > 0)
+                {
+                    Category uncat = Uncategorized;
+                    List<Command> commands = Commands;
+                    foreach (Command command in commands)
+                    {
+                        if (classTypesWithoutCategories.Contains(command.OwnerClass))
+                        {
+                            uncat.Commands.Add(command);
                         }
                     }
                 }
 
                 //sort alphabetically
                 categories = categories.OrderBy(x => x.Name).ToList();
-
-                if (typesWithoutCategories.Count > 0)
-                {
-                    Category uncategorized = Category.CreateUncategorized();
-                    List<Command> commands = Commands;
-                    foreach (Command command in commands)
-                    {
-                        if (typesWithoutCategories.Contains(command.Owner))
-                        {
-                            uncategorized.Commands.Add(command);
-                        }
-                    }
-
-                    if (uncategorized.Commands.Count > 0)
-                    {
-                        categories.Add(uncategorized);
-                    }
-                }
             }
         }
 
@@ -238,12 +256,16 @@ namespace Popcron.Console
                 FindCommands();
             }
 
-            if (!TryGetCategory(category, out Category cat))
+            Category categoryToUse = Uncategorized;
+            if (!string.IsNullOrEmpty(category))
             {
-                cat = Categories[Categories.Count - 1];
+                if (TryGetCategory(category, out Category existingCategory))
+                {
+                    categoryToUse = existingCategory;
+                }
             }
 
-            foreach (Command existingCommand in cat.Commands)
+            foreach (Command existingCommand in categoryToUse.Commands)
             {
                 if (existingCommand.GetHashCode() == command.GetHashCode())
                 {
@@ -252,7 +274,7 @@ namespace Popcron.Console
                 }
             }
 
-            cat.Commands.Add(command);
+            categoryToUse.Commands.Add(command);
             commands.Add(command);
         }
 

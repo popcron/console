@@ -19,12 +19,17 @@ namespace Popcron.Console
         private MethodInfo get;
         private MethodInfo set;
 
-        private Type owner;
+        private Type ownerClass;
         private List<object> parameters = new List<object>();
 
         public string Name => name;
         public List<string> Names => names;
-        public Type Owner => owner;
+
+        /// <summary>
+        /// The class in which the command is defined in.
+        /// </summary>
+        public Type OwnerClass => ownerClass;
+
         public string Description => description;
         public OnMethodInvokedEvent OnMethodInvoked { get; set; }
 
@@ -103,7 +108,7 @@ namespace Popcron.Console
             this.name = name;
             this.description = description;
             this.method = method;
-            this.owner = owner;
+            this.ownerClass = owner;
             Initialize();
         }
 
@@ -112,7 +117,7 @@ namespace Popcron.Console
             this.name = name;
             this.description = description;
             this.property = property;
-            this.owner = owner;
+            this.ownerClass = owner;
             Initialize();
         }
 
@@ -121,7 +126,7 @@ namespace Popcron.Console
             this.name = name;
             this.description = description;
             this.field = field;
-            this.owner = owner;
+            this.ownerClass = owner;
             Initialize();
         }
 

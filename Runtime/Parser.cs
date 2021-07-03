@@ -137,7 +137,7 @@ namespace Popcron.Console
         }
 
         /// <summary>
-        /// Sanitizes the input string so that its ok and good and nice.
+        /// Sanitizes the input string for proper GUI rendering.
         /// </summary>
         public static string Sanitize(string input)
         {
