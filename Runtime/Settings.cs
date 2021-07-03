@@ -60,6 +60,8 @@ namespace Popcron.Console
             }
         }
 
+        public float FontSize => fontSize;
+
         /// <summary>
         /// Returns the correct path to the log file.
         /// </summary>
@@ -178,8 +180,12 @@ namespace Popcron.Console
         [NonSerialized]
         private string cachedLogFilePath;
 
+        [NonSerialized]
+        private float fontSize;
+
         private void OnEnable()
         {
+            fontSize = consoleStyle.fontSize;
             current = this;
         }
 

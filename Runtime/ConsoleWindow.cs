@@ -37,7 +37,7 @@ namespace Popcron.Console
         {
             get
             {
-                float fontSize = Settings.Current.consoleStyle.fontSize;
+                float fontSize = Settings.Current.FontSize;
                 int lines = Mathf.RoundToInt(Screen.height * 0.45f / fontSize);
                 return Mathf.Clamp(lines, 4, 32);
             }

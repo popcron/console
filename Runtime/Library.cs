@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 
 namespace Popcron.Console
 {
@@ -50,63 +51,109 @@ namespace Popcron.Console
                         return assemblies;
                     }
 
-                    List<string> allAssemblies = Settings.Current.assemblies.ToList();
-                    Assembly executingAssembly = Assembly.GetExecutingAssembly();
-                    Assembly callingAssembly = Assembly.GetCallingAssembly();
-                    Assembly entryAssembly = Assembly.GetEntryAssembly();
-                    Assembly consoleAssembly = typeof(ConsoleWindow).Assembly;
-
-                    //ensure the last 4 assemblies exist in the list
-                    if (executingAssembly != null && !allAssemblies.Contains(executingAssembly.FullName))
-                    {
-                        allAssemblies.Add(executingAssembly.FullName);
-                    }
-
-                    if (callingAssembly != null && !allAssemblies.Contains(callingAssembly.FullName))
-                    {
-                        allAssemblies.Add(callingAssembly.FullName);
-                    }
-
-                    if (entryAssembly != null && !allAssemblies.Contains(entryAssembly.FullName))
-                    {
-                        allAssemblies.Add(entryAssembly.FullName);
-                    }
-
-                    if (consoleAssembly != null && !allAssemblies.Contains(consoleAssembly.FullName))
-                    {
-                        allAssemblies.Add(consoleAssembly.FullName);
-                    }
-
-                    if (allAssemblies.Contains("Assembly-CSharp"))
-                    {
-                        allAssemblies.Add("Assembly-CSharp");
-                    }
-
-                    if (allAssemblies.Contains("Assembly-CSharp-Editor"))
-                    {
-                        allAssemblies.Add("Assembly-CSharp-Editor");
-                    }
-
-                    assemblies = new List<(Assembly assembly, Type[] types)>();
-                    for (int a = 0; a < allAssemblies.Count; a++)
-                    {
-                        try
-                        {
-                            Assembly assembly = Assembly.Load(allAssemblies[a]);
-                            if (assembly != null)
-                            {
-                                Type[] types = assembly.GetTypes();
-                                assemblies.Add((assembly, types));
-                            }
-                        }
-                        catch
-                        {
-
-                        }
-                    }
+                    FindAllAssemblies();
                 }
 
                 return assemblies;
+            }
+        }
+
+        private static void FindAllAssemblies()
+        {
+            List<string> allAssemblies = Settings.Current.assemblies.ToList();
+            Assembly executingAssembly = Assembly.GetExecutingAssembly();
+            Assembly callingAssembly = Assembly.GetCallingAssembly();
+            Assembly entryAssembly = Assembly.GetEntryAssembly();
+            Assembly consoleAssembly = typeof(ConsoleWindow).Assembly;
+
+            //ensure the last 4 assemblies exist in the list
+            if (executingAssembly != null && !allAssemblies.Contains(executingAssembly.FullName))
+            {
+                allAssemblies.Add(executingAssembly.FullName);
+            }
+
+            if (callingAssembly != null && !allAssemblies.Contains(callingAssembly.FullName))
+            {
+                allAssemblies.Add(callingAssembly.FullName);
+            }
+
+            if (entryAssembly != null && !allAssemblies.Contains(entryAssembly.FullName))
+            {
+                allAssemblies.Add(entryAssembly.FullName);
+            }
+
+            if (consoleAssembly != null && !allAssemblies.Contains(consoleAssembly.FullName))
+            {
+                allAssemblies.Add(consoleAssembly.FullName);
+            }
+
+            assemblies = new List<(Assembly assembly, Type[] types)>();
+            for (int a = 0; a < allAssemblies.Count; a++)
+            {
+                AddAssembly(allAssemblies[a]);
+
+            }
+
+            if (!ContainsAssembly("Assembly-CSharp"))
+            {
+                AddAssembly("Assembly-CSharp", true);
+            }
+
+#if UNITY_EDITOR
+            if (!ContainsAssembly("Assembly-CSharp-Editor"))
+            {
+                AddAssembly("Assembly-CSharp-Editor", true);
+            }
+#endif
+        }
+
+        private static bool ContainsAssembly(string name)
+        {
+            for (int i = 0; i < assemblies.Count; i++)
+            {
+                if (assemblies[i].assembly.GetName().Name == name)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void AddAssembly(string name, bool searchAppDomain = false)
+        {
+            try
+            {
+                Assembly assemblyToLoad = null;
+                if (searchAppDomain)
+                {
+                    Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                    int length = assemblies.Length;
+                    for (int i = 0; i < length; i++)
+                    {
+                        Assembly assembly = assemblies[i];
+                        if (assembly.GetName().Name == name)
+                        {
+                            assemblyToLoad = assembly;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    assemblyToLoad = Assembly.Load(name);
+                }
+
+                if (assemblyToLoad != null)
+                {
+                    Debug.Log($"loaded assembly {name}");
+                    Type[] types = assemblyToLoad.GetTypes();
+                    assemblies.Add((assemblyToLoad, types));
+                }
+            }
+            catch
+            {
+
             }
         }
 
