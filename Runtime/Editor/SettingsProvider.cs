@@ -1,5 +1,11 @@
+#if UNITY_EDITOR
 using UnityEditor;
+
+#if UNITY_2019_1_OR_NEWER
 using UnityEngine.UIElements;
+#else
+using UnityEngine.Experimental.UIElements;
+#endif
 
 namespace Popcron.Console
 {
@@ -34,3 +40,4 @@ namespace Popcron.Console
         }
     }
 }
+#endif

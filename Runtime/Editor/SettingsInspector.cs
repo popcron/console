@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -159,3 +160,4 @@ namespace Popcron.Console
         }
     }
 }
+#endif

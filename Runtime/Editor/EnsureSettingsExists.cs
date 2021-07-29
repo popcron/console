@@ -1,4 +1,5 @@
-﻿#pragma warning disable CS0162 //unreachable code detected
+﻿#if UNITY_EDITOR
+#pragma warning disable CS0162 //unreachable code detected
 
 using System.Collections.Generic;
 using System.Linq;
@@ -117,3 +118,4 @@ namespace Popcron.Console
         }
     }
 }
+#endif
