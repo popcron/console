@@ -192,7 +192,8 @@ namespace Popcron.Console
                 }
             }
 
-            for (int c = 0; c < Library.Commands.Count; c++)
+            int commandsCount = Library.Commands.Count;
+            for (int c = 0; c < commandsCount; c++)
             {
                 Command command = Library.Commands[c];
                 bool nameMatch = false;

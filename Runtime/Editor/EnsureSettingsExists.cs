@@ -1,5 +1,4 @@
 ﻿#if UNITY_EDITOR
-#pragma warning disable CS0162 //unreachable code detected
 
 using System.Collections.Generic;
 using System.Linq;
@@ -45,7 +44,7 @@ namespace Popcron.Console
         /// </summary>
         private static void CreateSettings()
         {
-            if (!SettingsArePreloaded())
+            if (!FindSettings())
             {
                 //make a file here
                 string path = "Assets/Console Settings.asset";
@@ -80,18 +79,18 @@ namespace Popcron.Console
             return consoleStyle;
         }
 
-        private static bool SettingsArePreloaded()
+        public static Settings FindSettings()
         {
             Object[] preloadedAssets = PlayerSettings.GetPreloadedAssets();
             foreach (Object preloadedAsset in preloadedAssets)
             {
                 if (preloadedAsset && preloadedAsset is Settings)
                 {
-                    return true;
+                    return preloadedAsset as Settings;
                 }
             }
 
-            return false;
+            return null;
         }
 
         private static void PreloadSettings(Settings settings)

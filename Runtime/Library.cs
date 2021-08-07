@@ -18,7 +18,7 @@ namespace Popcron.Console
         {
             get
             {
-                if (commands == null)
+                if (commands == null || commands.Count == 0)
                 {
                     FindCommands();
                 }
@@ -317,7 +317,7 @@ namespace Popcron.Console
 
         public static void FindCommands()
         {
-            if (commands == null)
+            if (commands == null || commands.Count == 0)
             {
                 commands = new List<Command>();
                 for (int a = 0; a < Assemblies.Count; a++)

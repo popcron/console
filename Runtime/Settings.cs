@@ -39,7 +39,20 @@ namespace Popcron.Console
         /// <summary>
         /// The current settings data being used.
         /// </summary>
-        public static Settings Current => current;
+        public static Settings Current
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (!current)
+                {
+                    current = EnsureSettingsExist.FindSettings();
+                }
+#endif
+
+                return current;
+            }
+        }
 
         /// <summary>
         /// The hex value that represents the user typed text color.
