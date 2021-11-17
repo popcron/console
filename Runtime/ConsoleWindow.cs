@@ -33,13 +33,16 @@ namespace Popcron.Console
         public static OnAboutToPrint onAboutToPrint;
         public static OnPrinted onPrinted;
 
+        /// <summary>
+        /// The maximum amount of lines that can be shown on screen.
+        /// </summary>
         private static int MaxLines
         {
             get
             {
                 float fontSize = Settings.Current.FontSize;
                 int lines = Mathf.RoundToInt(Screen.height * 0.45f / fontSize);
-                return Mathf.Clamp(lines, 4, 32);
+                return Mathf.Clamp(lines, 4, 64);
             }
         }
 
@@ -540,13 +543,14 @@ namespace Popcron.Console
         /// </summary>
         private static void LogToFile(string text, string logType = null)
         {
-            if (Settings.Current.logToFile)
+            Settings settings = Settings.Current;
+            if (settings.logToFile)
             {
-                string path = Settings.Current.LogFilePath;
+                string path = settings.LogFilePath;
                 if (path == "./")
                 {
                     //if its just the 2 chars, then its not valid!
-                    Settings.Current.logToFile = false;
+                    settings.logToFile = false;
                     Debug.LogError($"Log file path is invalid, it must be a path to a file. Given path is {path}");
                     return;
                 }
@@ -554,7 +558,7 @@ namespace Popcron.Console
                 //check if it has an extension, indicating a file
                 if (!Path.HasExtension(path))
                 {
-                    Settings.Current.logToFile = false;
+                    settings.logToFile = false;
                     Debug.LogError($"Log file path is invalid, it must be a path to a file. Given path is {path}");
                     return;
                 }
@@ -574,7 +578,7 @@ namespace Popcron.Console
                 }
 
                 //append thy file
-                text = Settings.Current.FormatText(text, logType);
+                text = settings.FormatText(text, logType);
                 if (text != null)
                 {
                     using (StreamWriter stream = File.AppendText(path))
@@ -589,7 +593,7 @@ namespace Popcron.Console
         {
             List<string> lines = new List<string>();
             string str = input.ToString();
-            if (str.Contains("\n"))
+            if (str.IndexOf('\n') != -1)
             {
                 lines.AddRange(str.Split('\n'));
             }
@@ -795,7 +799,7 @@ namespace Popcron.Console
         /// <summary>
         /// Moves the caret to the end of the text field.
         /// </summary>
-        private void MoveToEnd()
+        private void MoveCaretToEnd()
         {
             TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
             if (te != null)
@@ -957,10 +961,11 @@ namespace Popcron.Console
         private void OnGUI()
         {
             bool moveToEnd = false;
+            Event current = Event.current;
             if (CheckForOpen())
             {
                 IsOpen = !IsOpen;
-                Event.current.Use();
+                current.Use();
                 return;
             }
 
@@ -972,17 +977,19 @@ namespace Popcron.Console
             }
 
             //view scrolling
-            if (Event.current.type == EventType.ScrollWheel)
+            if (current.type == EventType.ScrollWheel)
             {
-                int scrollDirection = (int)Mathf.Sign(Event.current.delta.y) * Settings.Current.scrollAmount;
+                int scrollDirection = (int)Mathf.Sign(current.delta.y) * Settings.Current.scrollAmount;
                 ScrollPosition += scrollDirection;
                 UpdateText();
+                current.Use();
+                return;
             }
 
-            //history scolling
-            if (Event.current.type == EventType.KeyDown)
+            //history scrolling
+            if (current.type == EventType.KeyDown)
             {
-                if (Event.current.keyCode == KeyCode.UpArrow)
+                if (current.keyCode == KeyCode.UpArrow)
                 {
                     if (!typedSomething)
                     {
@@ -1021,7 +1028,7 @@ namespace Popcron.Console
                         }
                     }
                 }
-                else if (Event.current.keyCode == KeyCode.DownArrow)
+                else if (current.keyCode == KeyCode.DownArrow)
                 {
                     if (!typedSomething)
                     {
@@ -1062,6 +1069,39 @@ namespace Popcron.Console
                 }
             }
 
+            //go to home
+            if (current.type == EventType.KeyDown)
+            {
+                if (current.keyCode == KeyCode.Home)
+                {
+                    ScrollPosition = 0;
+                    UpdateText();
+                    current.Use();
+                    return;
+                }
+                else if (current.keyCode == KeyCode.End)
+                {
+                    ScrollPosition = rawText.Count - MaxLines;
+                    UpdateText();
+                    current.Use();
+                    return;
+                }
+                else if (current.keyCode == KeyCode.PageUp)
+                {
+                    ScrollPosition -= MaxLines;
+                    UpdateText();
+                    current.Use();
+                    return;
+                }
+                else if (current.keyCode == KeyCode.PageDown)
+                {
+                    ScrollPosition += MaxLines;
+                    UpdateText();
+                    current.Use();
+                    return;
+                }
+            }
+
             //draw elements
             GUIStyle style = GetStyle();
             Color oldColor = GUI.color;
@@ -1081,7 +1121,7 @@ namespace Popcron.Console
 
             if (moveToEnd)
             {
-                MoveToEnd();
+                MoveCaretToEnd();
             }
 
             //text changed, search
