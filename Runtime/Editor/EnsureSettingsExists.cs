@@ -10,20 +10,23 @@ namespace Popcron.Console
     [InitializeOnLoad]
     public class EnsureSettingsExist
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void RuntimeInitialize()
         {
             ClearAllConsoleWindows();
             ConsoleWindow.CreateConsoleWindow();
-            CreateSettings();
+            CreateSettingsIfMissing();
         }
 
         static EnsureSettingsExist()
         {
-            CreateSettings();
+            CreateSettingsIfMissing();
         }
 
-        private static void ClearAllConsoleWindows()
+        /// <summary>
+        /// Clears all console windows found in all scenes.
+        /// </summary>
+        public static void ClearAllConsoleWindows()
         {
             ConsoleWindow[] consoleWindows = Resources.FindObjectsOfTypeAll<ConsoleWindow>();
             for (int i = consoleWindows.Length - 1; i >= 0; i--)
@@ -42,7 +45,7 @@ namespace Popcron.Console
         /// <summary>
         /// Puts a console object into the currently open scene.
         /// </summary>
-        private static void CreateSettings()
+        private static void CreateSettingsIfMissing()
         {
             if (!FindSettings())
             {
@@ -81,7 +84,6 @@ namespace Popcron.Console
 
         public static Settings FindSettings()
         {
-            //check in preloaded assets first
             Object[] preloadedAssets = PlayerSettings.GetPreloadedAssets();
             foreach (Object preloadedAsset in preloadedAssets)
             {
@@ -91,12 +93,13 @@ namespace Popcron.Console
                 }
             }
 
-            //no? check in asset database
             string[] guids = AssetDatabase.FindAssets($"t:{typeof(Settings).FullName}");
             if (guids.Length > 0)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                return AssetDatabase.LoadAssetAtPath<Settings>(path);
+                Settings settings = AssetDatabase.LoadAssetAtPath<Settings>(path);
+                PreloadSettings(settings);
+                return settings;
             }
 
             return null;
