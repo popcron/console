@@ -81,6 +81,7 @@ namespace Popcron.Console
 
         public static Settings FindSettings()
         {
+            //check in preloaded assets first
             Object[] preloadedAssets = PlayerSettings.GetPreloadedAssets();
             foreach (Object preloadedAsset in preloadedAssets)
             {
@@ -88,6 +89,14 @@ namespace Popcron.Console
                 {
                     return preloadedAsset as Settings;
                 }
+            }
+
+            //no? check in asset database
+            string[] guids = AssetDatabase.FindAssets($"t:{typeof(Settings).FullName}");
+            if (guids.Length > 0)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                return AssetDatabase.LoadAssetAtPath<Settings>(path);
             }
 
             return null;
