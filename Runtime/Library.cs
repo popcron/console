@@ -317,6 +317,7 @@ namespace Popcron.Console
 
         public static void FindCommands()
         {
+            const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
             if (commands == null || commands.Count == 0)
             {
                 commands = new List<Command>();
@@ -326,7 +327,7 @@ namespace Popcron.Console
                     for (int t = 0; t < types.Length; t++)
                     {
                         Type type = types[t];
-                        MethodInfo[] methods = type.GetMethods();
+                        MethodInfo[] methods = type.GetMethods(Flags);
                         for (int m = 0; m < methods.Length; m++)
                         {
                             MethodInfo method = methods[m];
@@ -337,7 +338,7 @@ namespace Popcron.Console
                             }
                         }
 
-                        PropertyInfo[] properties = type.GetProperties();
+                        PropertyInfo[] properties = type.GetProperties(Flags);
                         for (int p = 0; p < properties.Length; p++)
                         {
                             PropertyInfo property = properties[p];
@@ -348,7 +349,7 @@ namespace Popcron.Console
                             }
                         }
 
-                        FieldInfo[] fields = type.GetFields();
+                        FieldInfo[] fields = type.GetFields(Flags);
                         for (int f = 0; f < fields.Length; f++)
                         {
                             FieldInfo field = fields[f];
