@@ -25,7 +25,8 @@ namespace Popcron.Console
         private static ReadOnlyCollection<string> emptyHistory;
         private static ReadOnlyCollection<string> emptyText;
         private static List<(object, LogType)> lazyWriteLineOperations = new List<(object, LogType)>();
-        private static StringBuilder suggestionsText = new StringBuilder();
+        private static Dictionary<LogType, string> logTypeToString = new Dictionary<LogType, string>();
+        private static StringBuilder textBuilder = new StringBuilder();
 
         public delegate bool OnAboutToPrint(object obj, string text, LogType type);
         public delegate void OnPrinted(string text, LogType type);
@@ -396,35 +397,35 @@ namespace Popcron.Console
             }
             else if (message is List<byte> listOfBytes)
             {
-                StringBuilder builder = new StringBuilder(listOfBytes.Count * 5);
+                textBuilder.Clear();
                 int spacing = 25;
                 for (int i = 0; i < listOfBytes.Count; i++)
                 {
-                    builder.Append(listOfBytes[i].ToString("000"));
-                    builder.Append(" ");
+                    textBuilder.Append(listOfBytes[i].ToString("000"));
+                    textBuilder.Append(" ");
                     if (i % spacing == 0 && i >= spacing)
                     {
-                        builder.AppendLine();
+                        textBuilder.AppendLine();
                     }
                 }
 
-                return builder.ToString();
+                return textBuilder.ToString();
             }
             else if (message is byte[] arrayOfBytes)
             {
-                StringBuilder builder = new StringBuilder(arrayOfBytes.Length * 5);
+                textBuilder.Clear();
                 int spacing = 25;
                 for (int i = 0; i < arrayOfBytes.Length; i++)
                 {
-                    builder.Append(arrayOfBytes[i].ToString("000"));
-                    builder.Append(" ");
+                    textBuilder.Append(arrayOfBytes[i].ToString("000"));
+                    textBuilder.Append(" ");
                     if (i % spacing == 0 && i >= spacing)
                     {
-                        builder.AppendLine();
+                        textBuilder.AppendLine();
                     }
                 }
 
-                return builder.ToString();
+                return textBuilder.ToString();
             }
 
             return message.ToString();
@@ -453,6 +454,18 @@ namespace Popcron.Console
             }
         }
 
+        private static void EnsureLogTypeToStringCacheExists()
+        {
+            if (logTypeToString.Count == 0)
+            {
+                logTypeToString[LogType.Assert] = "Assert";
+                logTypeToString[LogType.Error] = "Error";
+                logTypeToString[LogType.Exception] = "Exception";
+                logTypeToString[LogType.Log] = "Log";
+                logTypeToString[LogType.Warning] = "Warning";
+            }
+        }
+
         /// <summary>
         /// Submit generic text to the console with an optional log type.
         /// </summary>
@@ -478,9 +491,10 @@ namespace Popcron.Console
                     return;
                 }
 
-                string color = Settings.Current.GetColor(type);
-                instance.Add(stringText, color);
-                LogToFile(Parser.RemoveRichText(stringText), type.ToString());
+                EnsureLogTypeToStringCacheExists();
+                string hexColor = Settings.Current.GetColor(type);
+                instance.Add(stringText, hexColor);
+                LogToFile(Parser.RemoveRichText(stringText), logTypeToString[type]);
 
                 //invoke the printed event
                 onPrinted?.Invoke(stringText, type);
@@ -517,8 +531,9 @@ namespace Popcron.Console
                     return;
                 }
 
+                EnsureLogTypeToStringCacheExists();
                 instance.Add(stringText, hexColor);
-                LogToFile(Parser.RemoveRichText(stringText), type.ToString());
+                LogToFile(Parser.RemoveRichText(stringText), logTypeToString[type]);
 
                 //invoke the printed event
                 onPrinted?.Invoke(stringText, type);
@@ -605,11 +620,16 @@ namespace Popcron.Console
             int historySize = Settings.Current.historySize;
             for (int i = 0; i < lines.Count; i++)
             {
-                string line = $"<color={color}>{lines[i]}</color>";
-                rawText.Add(line);
+                string line = lines[i];
+                textBuilder.Clear();
+                textBuilder.Append("<color=");
+                textBuilder.Append(color);
+                textBuilder.Append(">");
+                textBuilder.Append(line);
+                textBuilder.Append("</color>");
 
-                string newLine = Parser.RemoveRichText(lines[i]);
-                text.Add(newLine);
+                rawText.Add(textBuilder.ToString());
+                text.Add(Parser.RemoveRichText(line));
 
                 //too many entries!
                 if (rawText.Count > historySize)
@@ -630,32 +650,34 @@ namespace Popcron.Console
             UpdateText();
         }
 
-        //creates a single text to use when display the console
+        /// <summary>
+        /// Creates a single text string to use when displaying the console.
+        /// </summary>
         private void UpdateText()
         {
             string[] lines = new string[MaxLines];
             int lineIndex = 0;
-            for (int i = 0; i < rawText.Count; i++)
+            int rawTextCount = rawText.Count;
+            for (int i = 0; i < rawTextCount; i++)
             {
                 int index = i + scrollPosition;
                 if (index < 0)
                 {
                     continue;
                 }
-                else if (index >= rawText.Count)
+                else if (index >= rawTextCount)
                 {
                     continue;
                 }
-                else if (string.IsNullOrEmpty(rawText[index]))
+
+                string rawTextLine = rawText[index];
+                if (string.IsNullOrEmpty(rawTextLine))
                 {
                     break;
                 }
 
-                lines[lineIndex] = rawText[index];
-
                 //replace all \t with 4 spaces
-                lines[lineIndex] = lines[lineIndex].Replace("\t", "    ");
-
+                lines[lineIndex] = rawTextLine.Replace("\t", "    ");
                 lineIndex++;
                 if (lineIndex == MaxLines)
                 {
@@ -717,7 +739,7 @@ namespace Popcron.Console
 
             //if it starts with a @, then concat
             bool instanceOnly = false;
-            if (text.Length > 1 && text.StartsWith(Parser.IDPrefix + " "))
+            if (text.Length > 1 && text.StartsWith(Parser.IDPrefix))
             {
                 int index = text.IndexOf(' ');
                 if (index != -1)
@@ -738,11 +760,14 @@ namespace Popcron.Console
             }
 
             //fill in the suggestion text
-            StringBuilder textBuilder = new StringBuilder();
-            foreach (Category category in Library.Categories)
+            int categoryCount = Library.Categories.Count;
+            for (int y = 0; y < categoryCount; y++)
             {
-                foreach (Command command in category.Commands)
+                Category category = Library.Categories[y];
+                int commandCount = category.Commands.Count;
+                for (int c = 0; c < commandCount; c++)
                 {
+                    Command command = category.Commands[c];
                     if (Matches(text, command))
                     {
                         textBuilder.Clear();
@@ -759,7 +784,18 @@ namespace Popcron.Console
                             continue;
                         }
 
-                        textBuilder.Append(string.Join("/", command.Names));
+                        //append the name
+                        int nameCount = command.Names.Count;
+                        for (int n = 0; n < nameCount; n++)
+                        {
+                            string name = command.Names[n];
+                            textBuilder.Append(name);
+                            if (n != nameCount - 1)
+                            {
+                                textBuilder.Append("/");
+                            }
+                        }
+
                         if (command.Member is MethodInfo)
                         {
                             foreach (string parameter in command.Parameters)
@@ -1145,21 +1181,21 @@ namespace Popcron.Console
 
             //display the search suggestions
             GUI.color = new Color(1f, 1f, 1f, 0.4f);
-            suggestionsText.Clear();
+            textBuilder.Clear();
             for (int i = 0; i < searchResults.Count; i++)
             {
                 string searchResultText = Parser.Sanitize(searchResults[i].Text);
                 if (i == searchResults.Count - 1)
                 {
-                    suggestionsText.Append(searchResultText);
+                    textBuilder.Append(searchResultText);
                 }
                 else
                 {
-                    suggestionsText.AppendLine(searchResultText);
+                    textBuilder.AppendLine(searchResultText);
                 }
             }
 
-            string suggestions = suggestionsText.ToString();
+            string suggestions = textBuilder.ToString();
             GUI.Box(new Rect(0, lastControl.y + lastControl.height + 1 + lineHeight, Screen.width, searchResults.Count * lineHeight), suggestions, style);
             GUI.color = oldColor;
 

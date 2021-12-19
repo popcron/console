@@ -9,8 +9,6 @@ namespace Popcron.Console
 {
     public class Parser
     {
-        private static readonly Regex richTextRegex = new Regex(@"(<!--(\s|\S)*?-->)|(<\/?(\s|\S)*?>)");
-
         //&lt; is escaped version of the < char
         /// <summary>
         /// A fake left angle bracket that looks like &lt; but isnt one
@@ -32,20 +30,17 @@ namespace Popcron.Console
         /// </summary>
         public const string ValidChars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'/!@#$%^&*()_+-=[]{};':\",.˂˃/?";
 
-        private static StringBuilder stringBuilder = new StringBuilder();
-        private static Dictionary<string, Owner> idToOwner = new Dictionary<string, Owner>();
+        private static readonly StringBuilder stringBuilder = new StringBuilder();
+        private static readonly Dictionary<string, Owner> idToOwner = new Dictionary<string, Owner>();
 
-        public static List<Owner> Owners
+        public static IEnumerable<Owner> Owners
         {
             get
             {
-                List<Owner> owners = new List<Owner>();
                 foreach (KeyValuePair<string, Owner> owner in idToOwner)
                 {
-                    owners.Add(owner.Value);
+                    yield return owner.Value;
                 }
-
-                return owners;
             }
         }
 
@@ -81,13 +76,12 @@ namespace Popcron.Console
         /// </summary>
         public static void Unregister(object owner)
         {
-            List<Owner> owners = Owners;
-            for (int i = 0; i < owners.Count; i++)
+            foreach (KeyValuePair<string, Owner> stringToOwner in idToOwner)
             {
-                if (owners[i].owner == owner)
+                if (stringToOwner.Value.owner == owner)
                 {
-                    Unregister(owners[i].id);
-                    return;
+                    Unregister(stringToOwner.Value.id);
+                    break;
                 }
             }
         }
@@ -127,13 +121,32 @@ namespace Popcron.Console
                 return input;
             }
 
-            MatchCollection matches = richTextRegex.Matches(input);
-            foreach (Match match in matches)
+            int length = input.Length;
+            char[] array = new char[length];
+            int arrayIndex = 0;
+            bool inside = false;
+            for (int i = 0; i < length; i++)
             {
-                input = input.Replace(match.Value, "");
+                char c = input[i];
+                if (c == '<')
+                {
+                    inside = true;
+                    continue;
+                }
+                else if (c == '>')
+                {
+                    inside = false;
+                    continue;
+                }
+
+                if (!inside)
+                {
+                    array[arrayIndex] = c;
+                    arrayIndex++;
+                }
             }
 
-            return input;
+            return new string(array, 0, arrayIndex);
         }
 
         /// <summary>
