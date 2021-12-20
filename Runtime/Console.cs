@@ -133,6 +133,14 @@ public struct Console
     }
 
     /// <summary>
+    /// Manually ask the console window to simulate the enter key.
+    /// </summary>
+    public static void PressedEnterKey()
+    {
+        C.PressedEnterKey();
+    }
+
+    /// <summary>
     /// Runs a list of commands synchronously.
     /// </summary>
     public static void Run(List<string> commands)

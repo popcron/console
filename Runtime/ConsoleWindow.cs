@@ -299,6 +299,7 @@ namespace Popcron.Console
         private List<string> rawText = new List<string>();
         private ReadOnlyCollection<string> historyReadOnly;
         private ReadOnlyCollection<string> textReadOnly;
+        private bool manuallyPressedEnter;
 
         public void Initialize()
         {
@@ -463,6 +464,18 @@ namespace Popcron.Console
                 logTypeToString[LogType.Exception] = "Exception";
                 logTypeToString[LogType.Log] = "Log";
                 logTypeToString[LogType.Warning] = "Warning";
+            }
+        }
+
+        /// <summary>
+        /// Manually ask the console window to simulate the enter key.
+        /// </summary>
+        public static void PressedEnterKey()
+        {
+            ConsoleWindow instance = Instance;
+            if (instance)
+            {
+                instance.manuallyPressedEnter = true;
             }
         }
 
@@ -928,6 +941,12 @@ namespace Popcron.Console
         /// </summary>
         private bool CheckForEnter()
         {
+            if (manuallyPressedEnter)
+            {
+                manuallyPressedEnter = false;
+                return true;
+            }
+
             //try with input system if it exists
             Type keyboardType = GetKeyboardType();
             if (keyboardType != null)
