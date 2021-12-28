@@ -13,6 +13,7 @@ A command line parser for use in Unity.
 - Parameter support
 - Support for instance method commands
 - Support for methods, fields and properties
+- Code generation to minimize reflection at startup
 
 ## Installing
 To install for use in Unity, copy everything from this repository to `<YourNewUnityProject>/Packages/Popcron.Console` folder.

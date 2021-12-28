@@ -475,7 +475,10 @@ namespace Popcron.Console
             ConsoleWindow instance = Instance;
             if (instance)
             {
-                instance.manuallyPressedEnter = true;
+                if (instance.isOpen && !string.IsNullOrEmpty(instance.textInput))
+                {
+                    instance.manuallyPressedEnter = true;
+                }
             }
         }
 
@@ -777,6 +780,11 @@ namespace Popcron.Console
             for (int y = 0; y < categoryCount; y++)
             {
                 Category category = Library.Categories[y];
+                if (category == null)
+                {
+                    continue;
+                }
+
                 int commandCount = category.Commands.Count;
                 for (int c = 0; c < commandCount; c++)
                 {
@@ -941,12 +949,6 @@ namespace Popcron.Console
         /// </summary>
         private bool CheckForEnter()
         {
-            if (manuallyPressedEnter)
-            {
-                manuallyPressedEnter = false;
-                return true;
-            }
-
             //try with input system if it exists
             Type keyboardType = GetKeyboardType();
             if (keyboardType != null)
@@ -971,12 +973,11 @@ namespace Popcron.Console
                         if (framePressedOn != Time.frameCount)
                         {
                             framePressedOn = Time.frameCount;
-                            return yay;
+                            manuallyPressedEnter = false;
+                            return true;
                         }
                     }
                 }
-
-                return false;
             }
 
             //try with the gui system
@@ -985,8 +986,15 @@ namespace Popcron.Console
                 bool enter = Event.current.character == '\n' || Event.current.character == '\r' || Event.current.keyCode == KeyCode.Return;
                 if (enter)
                 {
+                    manuallyPressedEnter = false;
                     return true;
                 }
+            }
+
+            if (manuallyPressedEnter)
+            {
+                manuallyPressedEnter = false;
+                return true;
             }
 
             return false;

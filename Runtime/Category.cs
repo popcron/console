@@ -17,6 +17,11 @@ namespace Popcron.Console
             this.name = name;
         }
 
+        public override string ToString()
+        {
+            return name;
+        }
+
         public static Category Create(string name)
         {
             return new Category(name);

@@ -103,30 +103,30 @@ namespace Popcron.Console
             }
         }
 
-        private Command(string name, string description, MethodInfo method, Type owner)
+        private Command(string name, string description, MethodInfo method, Type ownerClassType = null)
         {
             this.name = name;
             this.description = description;
             this.method = method;
-            this.ownerClass = owner;
+            this.ownerClass = ownerClassType;
             Initialize();
         }
 
-        private Command(string name, string description, PropertyInfo property, Type owner)
+        private Command(string name, string description, PropertyInfo property, Type ownerClassType = null)
         {
             this.name = name;
             this.description = description;
             this.property = property;
-            this.ownerClass = owner;
+            this.ownerClass = ownerClassType;
             Initialize();
         }
 
-        private Command(string name, string description, FieldInfo field, Type owner)
+        private Command(string name, string description, FieldInfo field, Type ownerClassType = null)
         {
             this.name = name;
             this.description = description;
             this.field = field;
-            this.ownerClass = owner;
+            this.ownerClass = ownerClassType;
             Initialize();
         }
 
@@ -250,13 +250,33 @@ namespace Popcron.Console
             return null;
         }
 
-        public static Command Create(string name, string description, MethodInfo method, Type type)
+        public static Command Create(string name, string description, MemberInfo member, Type memberOwningType = null)
         {
-            Command command = new Command(name, description, method, type);
+            if (member is FieldInfo field)
+            {
+                return Create(name, description, field, memberOwningType);
+            }
+            else if (member is MethodInfo method)
+            {
+                return Create(name, description, method, memberOwningType);
+            }
+            else if (member is PropertyInfo property)
+            {
+                return Create(name, description, property, memberOwningType);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static Command Create(string name, string description, MethodInfo method, Type methodOwningType = null)
+        {
+            Command command = new Command(name, description, method, methodOwningType);
             return command;
         }
 
-        public static Command Create(MethodInfo method, Type type)
+        public static Command Create(MethodInfo method, Type methodOwningType = null)
         {
             CommandAttribute attribute = method.GetCommand();
             if (attribute == null)
@@ -264,16 +284,16 @@ namespace Popcron.Console
                 return null;
             }
 
-            return Create(attribute.name, attribute.description, method, type);
+            return Create(attribute.name, attribute.description, method, methodOwningType);
         }
 
-        public static Command Create(string name, string description, PropertyInfo property, Type type)
+        public static Command Create(string name, string description, PropertyInfo property, Type propertyOwningType = null)
         {
-            Command command = new Command(name, description, property, type);
+            Command command = new Command(name, description, property, propertyOwningType);
             return command;
         }
 
-        public static Command Create(PropertyInfo property, Type type)
+        public static Command Create(PropertyInfo property, Type propertyOwningType = null)
         {
             CommandAttribute attribute = property.GetCommand();
             if (attribute == null)
@@ -281,16 +301,16 @@ namespace Popcron.Console
                 return null;
             }
 
-            return Create(attribute.name, attribute.description, property, type);
+            return Create(attribute.name, attribute.description, property, propertyOwningType);
         }
 
-        public static Command Create(string name, string description, FieldInfo field, Type type)
+        public static Command Create(string name, string description, FieldInfo field, Type fieldOwningType = null)
         {
-            Command command = new Command(name, description, field, type);
+            Command command = new Command(name, description, field, fieldOwningType);
             return command;
         }
 
-        public static Command Create(FieldInfo field, Type type)
+        public static Command Create(FieldInfo field, Type fieldOwningType = null)
         {
             CommandAttribute attribute = field.GetCommand();
             if (attribute == null)
@@ -298,7 +318,7 @@ namespace Popcron.Console
                 return null;
             }
 
-            return Create(attribute.name, attribute.description, field, type);
+            return Create(attribute.name, attribute.description, field, fieldOwningType);
         }
 
         public bool Matches(List<string> parametersGiven, out object[] convertedParameters)

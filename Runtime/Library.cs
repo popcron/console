@@ -8,8 +8,8 @@ namespace Popcron.Console
     public sealed class Library
     {
         private static List<(Assembly assembly, Type[] types)> assemblies = null;
-        private static List<Command> commands = null;
-        private static List<Category> categories = null;
+        private static List<Command> commands = new List<Command>();
+        private static List<Category> categories = new List<Category>();
 
         /// <summary>
         /// List of all commands found.
@@ -18,11 +18,6 @@ namespace Popcron.Console
         {
             get
             {
-                if (commands == null || commands.Count == 0)
-                {
-                    FindCommands();
-                }
-
                 return commands;
             }
         }
@@ -34,7 +29,10 @@ namespace Popcron.Console
                 if (!TryGetCategory("Uncategorized", out Category category))
                 {
                     category = Category.Create("Uncategorized");
-                    categories.Add(category);
+                    if (categories != null)
+                    {
+                        categories.Add(category);
+                    }
                 }
 
                 return category;
@@ -45,11 +43,6 @@ namespace Popcron.Console
         {
             get
             {
-                if (categories == null)
-                {
-                    FindCategories();
-                }
-
                 return categories;
             }
         }
@@ -177,8 +170,35 @@ namespace Popcron.Console
             }
         }
 
+        public static void AddCategory(Category category)
+        {
+            if (category == null)
+            {
+                return;
+            }
+
+            if (categories == null)
+            {
+                categories = new List<Category>();
+            }
+
+            //short circuit if already exists!
+            int categoryCount = categories.Count;
+            for (int i = 0; i < categoryCount; i++)
+            {
+                Category cat = categories[i];
+                if (cat.Name == category.Name)
+                {
+                    return;
+                }
+            }
+
+            categories.Add(category);
+        }
+
         public static void FindCategories()
         {
+            return;
             if (categories == null)
             {
                 categories = new List<Category>();
@@ -317,6 +337,7 @@ namespace Popcron.Console
 
         public static void FindCommands()
         {
+            return;
             const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
             if (commands == null || commands.Count == 0)
             {
