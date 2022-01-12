@@ -47,10 +47,17 @@ namespace Popcron.Console
                     for (int m = 0; m < memberCount; m++)
                     {
                         MemberInfo member = members[m];
-                        if (member.GetCustomAttribute<CommandAttribute>() != null)
+                        try
                         {
-                            membersFound.Add(member);
-                            indices.Add(m);
+                            if (member.GetCustomAttribute<CommandAttribute>() != null)
+                            {
+                                membersFound.Add(member);
+                                indices.Add(m);
+                            }
+                        }
+                        catch
+                        {
+                            
                         }
                     }
                 }
@@ -62,7 +69,7 @@ namespace Popcron.Console
         private static void OnAfterAssemblyReload()
         {
             const string Indent = "    ";
-            List<string> namespaces = new();
+            List<string> namespaces = new List<string>();
             namespaces.Add("UnityEngine");
             namespaces.Add("UnityEngine.Scripting");
             namespaces.Add("System");
