@@ -15,9 +15,19 @@ namespace Popcron.Console
         private static readonly StringBuilder contents = new StringBuilder();
         private const BindingFlags Flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
+        public static Func<string> PathToFile { get; } = GetPathToFile;
+
         static Generator()
         {
             AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
+        }
+
+        private static string GetPathToFile()
+        {
+            string typeName = "CommandLoader";
+            string folder = Path.Combine(Application.dataPath, "Code", "Generated");
+            string path = Path.Combine(folder, $"{typeName}.generated.cs");
+            return path;
         }
 
         private static (List<Type>, List<MemberInfo>, List<int>) GetAll()
@@ -57,7 +67,7 @@ namespace Popcron.Console
                         }
                         catch
                         {
-                            
+
                         }
                     }
                 }
@@ -78,9 +88,14 @@ namespace Popcron.Console
 
             (List<Type> categories, List<MemberInfo> members, List<int> indices) = GetAll();
             string myNamespace = "Popcron.Console";
-            string typeName = "CommandLoader";
-            string folder = Path.Combine(Application.dataPath, "Code", "Generated");
-            string path = Path.Combine(folder, $"{typeName}.generated.cs");
+            string path = PathToFile.Invoke();
+            string folder = Directory.GetParent(path).FullName;
+            string typeName = Path.GetFileName(path);
+            if (typeName.Contains('.'))
+            {
+                typeName = typeName.Substring(0, typeName.IndexOf('.'));
+            }
+
             if (!Directory.Exists(folder))
             {
                 Directory.CreateDirectory(folder);
@@ -98,6 +113,10 @@ namespace Popcron.Console
             contents.Append("namespace ");
             contents.AppendLine(myNamespace);
             contents.AppendLine("{");
+
+            contents.Append(Indent);
+            contents.AppendLine("using Type = System.Type;");
+            contents.AppendLine();
 
             contents.Append(Indent);
             contents.AppendLine("[Preserve]");
@@ -254,9 +273,9 @@ namespace Popcron.Console
                 contents.Append(Indent);
                 contents.Append(Indent);
                 contents.Append(Indent);
-                contents.Append("type = typeof(");
+                contents.Append("type = Type.GetType(\"");
                 contents.Append(category.FullName);
-                contents.Append(");");
+                contents.Append("\");");
                 contents.AppendLine();
 
                 contents.Append(Indent);
@@ -305,9 +324,9 @@ namespace Popcron.Console
                     contents.Append(Indent);
                     contents.Append(Indent);
                     contents.Append(Indent);
-                    contents.Append("type = typeof(");
+                    contents.Append("type = Type.GetType(\"");
                     contents.Append(owningType.FullName);
-                    contents.Append(");");
+                    contents.Append("\");");
                     contents.AppendLine();
                 }
 
