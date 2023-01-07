@@ -274,7 +274,7 @@ namespace Popcron.Console
                 contents.Append(Indent);
                 contents.Append(Indent);
                 contents.Append("type = Type.GetType(\"");
-                contents.Append(category.FullName);
+                contents.Append(category.AssemblyQualifiedName);
                 contents.Append("\");");
                 contents.AppendLine();
 
@@ -325,7 +325,7 @@ namespace Popcron.Console
                     contents.Append(Indent);
                     contents.Append(Indent);
                     contents.Append("type = Type.GetType(\"");
-                    contents.Append(owningType.FullName);
+                    contents.Append(owningType.AssemblyQualifiedName);
                     contents.Append("\");");
                     contents.AppendLine();
                 }
