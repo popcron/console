@@ -9,26 +9,10 @@ using UnityEngine;
 
 namespace Popcron.Console
 {
-    [InitializeOnLoad]
     public static class Generator
     {
         private static readonly StringBuilder contents = new StringBuilder();
         private const BindingFlags Flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
-        public static Func<string> PathToFile { get; } = GetPathToFile;
-
-        static Generator()
-        {
-            AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
-        }
-
-        private static string GetPathToFile()
-        {
-            string typeName = "CommandLoader";
-            string folder = Path.Combine(Application.dataPath, "Code", "Generated");
-            string path = Path.Combine(folder, $"{typeName}.generated.cs");
-            return path;
-        }
 
         private static (List<Type>, List<MemberInfo>, List<int>) GetAll()
         {
@@ -75,8 +59,24 @@ namespace Popcron.Console
 
             return (categoriesFound, membersFound, indices);
         }
+        
+        /// <summary>
+        /// Generates the script source for a command loader and writes it to a file at this path.
+        /// </summary>
+        public static void GenerateScriptSource(string path)
+        {
+            string typeName = Path.GetFileNameWithoutExtension(path);
+            string fileContent = GenerateScriptSource(null, typeName);
+            if (!File.Exists(path) || File.ReadAllText(path) != fileContent)
+            {
+                File.WriteAllText(path, fileContent);
+            }
+        }
 
-        private static void OnAfterAssemblyReload()
+        /// <summary>
+        /// Generates the script source for a command loader.
+        /// </summary>
+        public static string GenerateScriptSource(string namespaceName, string typeName)
         {
             const string Indent = "    ";
             List<string> namespaces = new List<string>();
@@ -87,20 +87,7 @@ namespace Popcron.Console
             namespaces.Add("System.Collections.Generic");
 
             (List<Type> categories, List<MemberInfo> members, List<int> indices) = GetAll();
-            string myNamespace = "Popcron.Console";
-            string path = PathToFile.Invoke();
-            string folder = Directory.GetParent(path).FullName;
-            string typeName = Path.GetFileName(path);
-            if (typeName.Contains('.'))
-            {
-                typeName = typeName.Substring(0, typeName.IndexOf('.'));
-            }
-
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
-
+            
             contents.Clear();
             foreach (string ns in namespaces)
             {
@@ -110,8 +97,12 @@ namespace Popcron.Console
             }
 
             contents.AppendLine();
-            contents.Append("namespace ");
-            contents.AppendLine(myNamespace);
+            if (!string.IsNullOrEmpty(namespaceName))
+            {
+                contents.Append("namespace ");
+                contents.AppendLine(namespaceName);
+            }
+            
             contents.AppendLine("{");
 
             contents.Append(Indent);
@@ -389,12 +380,7 @@ namespace Popcron.Console
             contents.Append(Indent);
             contents.AppendLine("}");
             contents.AppendLine("}");
-
-            string fileContent = contents.ToString();
-            if (!File.Exists(path) || File.ReadAllText(path) != fileContent)
-            {
-                File.WriteAllText(path, fileContent);
-            }
+            return contents.ToString();
         }
     }
 }
